@@ -1,0 +1,273 @@
+// Prisma schema for Smart Kirana - Stock & Sales Manager
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// User Roles Enum
+enum UserRole {
+  OPERATIONS  // Billing/counter staff
+  OWNER       // Shop owner with full access
+  SUPPORT     // Customer support
+  ADMIN       // Platform admin
+}
+
+// Business Type Enum
+enum BusinessType {
+  BAKERY
+  VEGETABLES
+  FRUITS
+  GENERAL_STORE
+  OTHER
+}
+
+// Subscription Tier Enum
+enum SubscriptionTier {
+  FREE
+  BASIC
+  PRO
+  ENTERPRISE
+}
+
+// User Model - All system users
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  password      String    // Hashed password
+  name          String
+  role          UserRole
+  sellerId      String?   // null for ADMIN and SUPPORT
+  seller        Seller?   @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([email])
+  @@index([sellerId])
+}
+
+// Seller/Shop Model
+model Seller {
+  id                String         @id @default(cuid())
+  shopName          String
+  businessType      BusinessType
+  ownerName         String
+  phone             String
+  email             String         @unique
+  address           String?
+  isActive          Boolean        @default(true)
+  
+  // Relations
+  users             User[]
+  subscription      Subscription?
+  products          Product[]
+  categories        Category[]
+  customers         Customer[]
+  sales             Sale[]
+  expenses          Expense[]
+  notifications     Notification[]
+  
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+
+  @@index([email])
+  @@index([isActive])
+}
+
+// Subscription Plan Model
+model SubscriptionPlan {
+  id                String              @id @default(cuid())
+  name              String
+  tier              SubscriptionTier    @unique
+  price             Float
+  features          Json                // Feature flags as JSON
+  maxProducts       Int?                // null = unlimited
+  maxUsers          Int?
+  hasAnalytics      Boolean             @default(false)
+  hasReports        Boolean             @default(false)
+  hasExports        Boolean             @default(false)
+  hasCustomerInsights Boolean           @default(false)
+  isActive          Boolean             @default(true)
+  
+  subscriptions     Subscription[]
+  
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+}
+
+// Seller Subscription Model
+model Subscription {
+  id                String            @id @default(cuid())
+  sellerId          String            @unique
+  seller            Seller            @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  planId            String
+  plan              SubscriptionPlan  @relation(fields: [planId], references: [id])
+  startDate         DateTime          @default(now())
+  endDate           DateTime?
+  isActive          Boolean           @default(true)
+  
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+
+  @@index([sellerId])
+  @@index([planId])
+}
+
+// Category Model
+model Category {
+  id          String    @id @default(cuid())
+  name        String
+  sellerId    String
+  seller      Seller    @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  products    Product[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@unique([sellerId, name])
+  @@index([sellerId])
+}
+
+// Product Model
+model Product {
+  id              String      @id @default(cuid())
+  name            String
+  categoryId      String
+  category        Category    @relation(fields: [categoryId], references: [id])
+  sellerId        String
+  seller          Seller      @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  purchasePrice   Float
+  sellingPrice    Float
+  currentStock    Int         @default(0)
+  minStockLevel   Int         @default(10) // Alert threshold
+  description     String?
+  isActive        Boolean     @default(true)
+  
+  stockTransactions StockTransaction[]
+  saleItems         SaleItem[]
+  
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  @@index([sellerId])
+  @@index([categoryId])
+  @@index([isActive])
+}
+
+// Stock Transaction Model - Track all stock movements
+model StockTransaction {
+  id              String    @id @default(cuid())
+  productId       String
+  product         Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  quantity        Int       // Positive for addition, negative for sale
+  purchasePrice   Float?    // When adding stock
+  notes           String?
+  transactionType String    // "PURCHASE" or "SALE" or "ADJUSTMENT"
+  createdBy       String    // User ID who made the transaction
+  createdAt       DateTime  @default(now())
+
+  @@index([productId])
+  @@index([createdAt])
+}
+
+// Customer Model
+model Customer {
+  id              String    @id @default(cuid())
+  name            String
+  phone           String
+  email           String?
+  sellerId        String
+  seller          Seller    @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  
+  sales           Sale[]
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@unique([sellerId, phone])
+  @@index([sellerId])
+  @@index([phone])
+}
+
+// Sale Model
+model Sale {
+  id              String      @id @default(cuid())
+  saleNumber      String      @unique // Auto-generated invoice number
+  sellerId        String
+  seller          Seller      @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  customerId      String?
+  customer        Customer?   @relation(fields: [customerId], references: [id])
+  
+  subtotal        Float
+  discountType    String?     // "PERCENTAGE" or "FLAT"
+  discountValue   Float       @default(0)
+  discountAmount  Float       @default(0)
+  total           Float
+  profit          Float       // Auto-calculated
+  
+  items           SaleItem[]
+  
+  createdBy       String      // User ID who created the sale
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  @@index([sellerId])
+  @@index([customerId])
+  @@index([createdAt])
+  @@index([saleNumber])
+}
+
+// Sale Item Model
+model SaleItem {
+  id              String    @id @default(cuid())
+  saleId          String
+  sale            Sale      @relation(fields: [saleId], references: [id], onDelete: Cascade)
+  productId       String
+  product         Product   @relation(fields: [productId], references: [id])
+  
+  quantity        Int
+  purchasePrice   Float     // Locked at time of sale
+  sellingPrice    Float     // Can be edited per transaction
+  subtotal        Float
+  profit          Float     // (sellingPrice - purchasePrice) * quantity
+  
+  createdAt       DateTime  @default(now())
+
+  @@index([saleId])
+  @@index([productId])
+}
+
+// Expense Model - For owner's business expense tracking
+model Expense {
+  id          String    @id @default(cuid())
+  sellerId    String
+  seller      Seller    @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  category    String    // "PURCHASE", "RENT", "UTILITIES", "SALARY", "OTHER"
+  amount      Float
+  description String?
+  date        DateTime  @default(now())
+  createdAt   DateTime  @default(now())
+  
+  @@index([sellerId])
+  @@index([date])
+}
+
+// Notification Model - For alerts and notifications
+model Notification {
+  id          String    @id @default(cuid())
+  sellerId    String
+  seller      Seller    @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  type        String    // "LOW_STOCK", "OUT_OF_STOCK", "DAILY_SUMMARY"
+  title       String
+  message     String
+  isRead      Boolean   @default(false)
+  metadata    Json?     // Additional data like product ID for stock alerts
+  createdAt   DateTime  @default(now())
+
+  @@index([sellerId])
+  @@index([isRead])
+  @@index([createdAt])
+}
