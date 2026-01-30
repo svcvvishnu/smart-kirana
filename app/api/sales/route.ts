@@ -1,8 +1,12 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/db";
+import { PrismaClient } from "@prisma/client";
 
-type PrismaTransaction = Parameters<Parameters<typeof prisma.$transaction>[0]>[0];
+type PrismaTransaction = Omit<
+    PrismaClient,
+    "$connect" | "$disconnect" | "$on" | "$transaction" | "$use" | "$extends"
+>;
 
 // Generate unique sale number
 async function generateSaleNumber(sellerId: string): Promise<string> {
@@ -24,8 +28,13 @@ async function generateSaleNumber(sellerId: string): Promise<string> {
 
     let sequence = 1;
     if (lastSale) {
-        const lastSequence = parseInt(lastSale.saleNumber.split("-")[2]);
-        sequence = lastSequence + 1;
+        const parts = lastSale.saleNumber.split("-");
+        if (parts.length >= 3) {
+            const lastSequence = parseInt(parts[2], 10);
+            if (!isNaN(lastSequence) && lastSequence > 0) {
+                sequence = lastSequence + 1;
+            }
+        }
     }
 
     return `INV-${dateStr}-${sequence.toString().padStart(3, "0")}`;
@@ -41,8 +50,10 @@ export async function GET(request: Request) {
         }
 
         const { searchParams } = new URL(request.url);
-        const limit = parseInt(searchParams.get("limit") || "50");
-        const offset = parseInt(searchParams.get("offset") || "0");
+        const limitParam = searchParams.get("limit");
+        const offsetParam = searchParams.get("offset");
+        const limit = limitParam ? Math.max(1, Math.min(100, parseInt(limitParam, 10) || 50)) : 50;
+        const offset = offsetParam ? Math.max(0, parseInt(offsetParam, 10) || 0) : 0;
         const customerId = searchParams.get("customerId");
 
         const sales = await prisma.sale.findMany({
@@ -94,19 +105,107 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: "Forbidden" }, { status: 403 });
         }
 
-        const body = await request.json();
+        let body;
+        try {
+            body = await request.json();
+        } catch (error) {
+            return NextResponse.json(
+                { error: "Invalid JSON in request body" },
+                { status: 400 }
+            );
+        }
+
         const { items, customerId, discountType, discountValue } = body;
 
         // Validate items
-        if (!items || items.length === 0) {
+        if (!items || !Array.isArray(items) || items.length === 0) {
             return NextResponse.json(
                 { error: "At least one item is required" },
                 { status: 400 }
             );
         }
 
+        // Validate item structure and check for duplicates
+        const seenProductIds = new Set<string>();
+        for (const item of items) {
+            if (!item || typeof item !== "object") {
+                return NextResponse.json(
+                    { error: "Invalid item structure" },
+                    { status: 400 }
+                );
+            }
+            if (!item.productId || typeof item.productId !== "string") {
+                return NextResponse.json(
+                    { error: "Each item must have a valid productId" },
+                    { status: 400 }
+                );
+            }
+            if (
+                typeof item.quantity !== "number" ||
+                item.quantity <= 0 ||
+                !Number.isInteger(item.quantity)
+            ) {
+                return NextResponse.json(
+                    { error: "Each item must have a positive integer quantity" },
+                    { status: 400 }
+                );
+            }
+            if (seenProductIds.has(item.productId)) {
+                return NextResponse.json(
+                    { error: `Duplicate productId: ${item.productId}` },
+                    { status: 400 }
+                );
+            }
+            seenProductIds.add(item.productId);
+        }
+
+        // Validate discount
+        if (discountType && discountType !== "PERCENTAGE" && discountType !== "FLAT") {
+            return NextResponse.json(
+                { error: "discountType must be 'PERCENTAGE' or 'FLAT'" },
+                { status: 400 }
+            );
+        }
+        if (discountValue !== undefined && discountValue !== null) {
+            if (typeof discountValue !== "number" || discountValue < 0) {
+                return NextResponse.json(
+                    { error: "discountValue must be a non-negative number" },
+                    { status: 400 }
+                );
+            }
+            if (discountType === "PERCENTAGE" && discountValue > 100) {
+                return NextResponse.json(
+                    { error: "Percentage discount cannot exceed 100" },
+                    { status: 400 }
+                );
+            }
+        }
+
+        // Validate customerId if provided
+        if (customerId !== undefined && customerId !== null) {
+            if (typeof customerId !== "string") {
+                return NextResponse.json(
+                    { error: "customerId must be a string" },
+                    { status: 400 }
+                );
+            }
+            // Verify customer belongs to seller
+            const customer = await prisma.customer.findFirst({
+                where: {
+                    id: customerId,
+                    sellerId: session.user.sellerId,
+                },
+            });
+            if (!customer) {
+                return NextResponse.json(
+                    { error: "Customer not found or does not belong to your seller account" },
+                    { status: 404 }
+                );
+            }
+        }
+
         // Fetch all products to validate stock and prices
-        const productIds = items.map((item: any) => item.productId);
+        const productIds = items.map((item: { productId: string; quantity: number }) => item.productId);
         const products = await prisma.product.findMany({
             where: {
                 id: { in: productIds },
@@ -122,7 +221,7 @@ export async function POST(request: Request) {
             );
         }
 
-        // Validate stock availability
+        // Validate stock availability and prices
         for (const item of items) {
             const product = products.find((p: typeof products[number]) => p.id === item.productId);
             if (!product) {
@@ -139,11 +238,23 @@ export async function POST(request: Request) {
                     { status: 400 }
                 );
             }
+            if (product.sellingPrice <= 0) {
+                return NextResponse.json(
+                    { error: `Product ${product.name} has invalid selling price` },
+                    { status: 400 }
+                );
+            }
+            if (product.purchasePrice < 0) {
+                return NextResponse.json(
+                    { error: `Product ${product.name} has invalid purchase price` },
+                    { status: 400 }
+                );
+            }
         }
 
         // Calculate totals
         let subtotal = 0;
-        const saleItems = items.map((item: any) => {
+        const saleItems = items.map((item: { productId: string; quantity: number }) => {
             const product = products.find((p: typeof products[number]) => p.id === item.productId)!;
             const itemSubtotal = product.sellingPrice * item.quantity;
             const itemProfit =
@@ -163,15 +274,19 @@ export async function POST(request: Request) {
 
         // Calculate discount
         let discountAmount = 0;
-        if (discountType && discountValue) {
+        if (discountType && discountValue !== undefined && discountValue !== null) {
             if (discountType === "PERCENTAGE") {
                 discountAmount = (subtotal * discountValue) / 100;
             } else if (discountType === "FLAT") {
                 discountAmount = discountValue;
             }
+            // Ensure discount doesn't exceed subtotal
+            if (discountAmount > subtotal) {
+                discountAmount = subtotal;
+            }
         }
 
-        const total = subtotal - discountAmount;
+        const total = Math.max(0, subtotal - discountAmount);
         const totalProfit = saleItems.reduce((sum: number, item: { profit: number }) => sum + item.profit, 0);
 
         // Generate sale number
@@ -179,6 +294,24 @@ export async function POST(request: Request) {
 
         // Create sale with items in a transaction
         const sale = await prisma.$transaction(async (tx: PrismaTransaction) => {
+            // Re-validate stock inside transaction to prevent race conditions
+            for (const item of items) {
+                const currentProduct = await tx.product.findUnique({
+                    where: { id: item.productId },
+                    select: { currentStock: true, name: true },
+                });
+
+                if (!currentProduct) {
+                    throw new Error(`Product ${item.productId} not found`);
+                }
+
+                if (currentProduct.currentStock < item.quantity) {
+                    throw new Error(
+                        `Insufficient stock for ${currentProduct.name}. Available: ${currentProduct.currentStock}`
+                    );
+                }
+            }
+
             // Create sale
             const newSale = await tx.sale.create({
                 data: {
@@ -204,9 +337,7 @@ export async function POST(request: Request) {
 
             // Update product stock and create stock transactions
             for (const item of items) {
-                const product = products.find((p: typeof products[number]) => p.id === item.productId)!;
-
-                // Update stock
+                // Update stock (this will fail if stock goes negative due to race condition)
                 await tx.product.update({
                     where: { id: item.productId },
                     data: {
@@ -232,8 +363,27 @@ export async function POST(request: Request) {
         });
 
         return NextResponse.json(sale, { status: 201 });
-    } catch (error) {
+    } catch (error: any) {
         console.error("Error creating sale:", error);
+        
+        // Handle specific Prisma errors
+        if (error.code === "P2002") {
+            return NextResponse.json(
+                { error: "Sale number already exists. Please try again." },
+                { status: 409 }
+            );
+        }
+        
+        // Handle validation errors from transaction
+        if (error.message && typeof error.message === "string") {
+            if (error.message.includes("Insufficient stock") || error.message.includes("not found")) {
+                return NextResponse.json(
+                    { error: error.message },
+                    { status: 400 }
+                );
+            }
+        }
+        
         return NextResponse.json(
             { error: "Failed to create sale" },
             { status: 500 }
