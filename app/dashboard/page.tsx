@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Package, TrendingUp, Users, AlertTriangle, ShoppingCart, BarChart3 } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
+import { LogoutButton } from "@/components/LogoutButton";
 
 export default async function DashboardPage() {
     const session = await auth();
@@ -30,9 +31,12 @@ export default async function DashboardPage() {
                                 Welcome back, {user.name}
                             </p>
                         </div>
-                        <div className="text-right">
-                            <p className="text-sm font-medium text-muted-foreground">Role</p>
-                            <p className="text-lg font-semibold capitalize">{user.role.toLowerCase()}</p>
+                        <div className="flex items-center gap-4">
+                            <div className="text-right">
+                                <p className="text-sm font-medium text-muted-foreground">Role</p>
+                                <p className="text-lg font-semibold capitalize">{user.role.toLowerCase()}</p>
+                            </div>
+                            <LogoutButton />
                         </div>
                     </div>
                 </div>
