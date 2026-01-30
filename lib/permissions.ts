@@ -1,7 +1,5 @@
-import { Prisma } from '@prisma/client'
-
-type UserRole = Prisma.UserRole
-type SubscriptionTier = Prisma.SubscriptionTier
+type UserRole = "OPERATIONS" | "OWNER" | "SUPPORT" | "ADMIN"
+type SubscriptionTier = "FREE" | "BASIC" | "PRO" | "ENTERPRISE"
 
 export interface FeaturePermissions {
     canViewAnalytics: boolean

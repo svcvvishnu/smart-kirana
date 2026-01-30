@@ -2,9 +2,8 @@ import NextAuth from "next-auth"
 import Credentials from "next-auth/providers/credentials"
 import { prisma } from "@/lib/db"
 import bcrypt from "bcryptjs"
-import { Prisma } from "@prisma/client"
 
-type UserRole = Prisma.UserRole
+type UserRole = "OPERATIONS" | "OWNER" | "SUPPORT" | "ADMIN"
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
     session: { strategy: "jwt" },

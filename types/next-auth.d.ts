@@ -1,7 +1,6 @@
 import { DefaultSession } from "next-auth"
-import { Prisma } from "@prisma/client"
 
-type UserRole = Prisma.UserRole
+type UserRole = "OPERATIONS" | "OWNER" | "SUPPORT" | "ADMIN"
 
 declare module "next-auth" {
     interface Session {
