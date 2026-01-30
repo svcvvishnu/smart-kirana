@@ -67,8 +67,8 @@ export default async function InventoryPage() {
     ]);
 
     const totalProducts = stats.length;
-    const lowStockCount = stats.filter((p) => p.currentStock < p.minStockLevel).length;
-    const outOfStockCount = stats.filter((p) => p.currentStock === 0).length;
+    const lowStockCount = stats.filter((p: typeof stats[number]) => p.currentStock < p.minStockLevel).length;
+    const outOfStockCount = stats.filter((p: typeof stats[number]) => p.currentStock === 0).length;
 
     return (
         <InventoryClient
