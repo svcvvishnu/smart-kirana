@@ -122,7 +122,7 @@ export async function POST(request: Request) {
 
         // Validate stock availability
         for (const item of items) {
-            const product = products.find((p) => p.id === item.productId);
+            const product = products.find((p: typeof products[number]) => p.id === item.productId);
             if (!product) {
                 return NextResponse.json(
                     { error: `Product ${item.productId} not found` },
@@ -142,7 +142,7 @@ export async function POST(request: Request) {
         // Calculate totals
         let subtotal = 0;
         const saleItems = items.map((item: any) => {
-            const product = products.find((p) => p.id === item.productId)!;
+            const product = products.find((p: typeof products[number]) => p.id === item.productId)!;
             const itemSubtotal = product.sellingPrice * item.quantity;
             const itemProfit =
                 (product.sellingPrice - product.purchasePrice) * item.quantity;
@@ -202,7 +202,7 @@ export async function POST(request: Request) {
 
             // Update product stock and create stock transactions
             for (const item of items) {
-                const product = products.find((p) => p.id === item.productId)!;
+                const product = products.find((p: typeof products[number]) => p.id === item.productId)!;
 
                 // Update stock
                 await tx.product.update({
