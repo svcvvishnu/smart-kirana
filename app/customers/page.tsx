@@ -48,7 +48,7 @@ export default async function CustomersPage() {
 
     // Calculate stats
     const customersWithStats = await Promise.all(
-        customers.map(async (customer) => {
+        customers.map(async (customer: typeof customers[number]) => {
             const totalPurchases = await prisma.sale.aggregate({
                 where: {
                     customerId: customer.id,
