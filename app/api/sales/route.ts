@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/db";
 
+type PrismaTransaction = Parameters<Parameters<typeof prisma.$transaction>[0]>[0];
+
 // Generate unique sale number
 async function generateSaleNumber(sellerId: string): Promise<string> {
     const today = new Date();
@@ -176,7 +178,7 @@ export async function POST(request: Request) {
         const saleNumber = await generateSaleNumber(session.user.sellerId);
 
         // Create sale with items in a transaction
-        const sale = await prisma.$transaction(async (tx) => {
+        const sale = await prisma.$transaction(async (tx: PrismaTransaction) => {
             // Create sale
             const newSale = await tx.sale.create({
                 data: {
