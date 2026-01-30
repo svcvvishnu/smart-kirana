@@ -1,4 +1,7 @@
-import { UserRole, SubscriptionTier } from '@prisma/client'
+import { Prisma } from '@prisma/client'
+
+type UserRole = Prisma.UserRole
+type SubscriptionTier = Prisma.SubscriptionTier
 
 export interface FeaturePermissions {
     canViewAnalytics: boolean
