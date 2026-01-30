@@ -35,7 +35,7 @@ interface Product {
     sellingPrice: number;
     currentStock: number;
     minStockLevel: number;
-    description?: string;
+    description?: string | null;
 }
 
 interface ProductFormProps {
@@ -249,7 +249,7 @@ export function ProductForm({
                             <Label htmlFor="description">Description (Optional)</Label>
                             <Input
                                 id="description"
-                                value={formData.description}
+                                value={formData.description ?? ""}
                                 onChange={(e) =>
                                     setFormData({ ...formData, description: e.target.value })
                                 }

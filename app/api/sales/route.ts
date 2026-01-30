@@ -170,7 +170,7 @@ export async function POST(request: Request) {
         }
 
         const total = subtotal - discountAmount;
-        const totalProfit = saleItems.reduce((sum, item) => sum + item.profit, 0);
+        const totalProfit = saleItems.reduce((sum: number, item: { profit: number }) => sum + item.profit, 0);
 
         // Generate sale number
         const saleNumber = await generateSaleNumber(session.user.sellerId);

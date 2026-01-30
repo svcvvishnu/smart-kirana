@@ -5,10 +5,11 @@ import { prisma } from "@/lib/db";
 // GET /api/customers/[id] - Fetch customer with purchase history
 export async function GET(
     request: Request,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
         const session = await auth();
+        const { id } = await params;
 
         if (!session?.user?.sellerId) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -16,7 +17,7 @@ export async function GET(
 
         const customer = await prisma.customer.findFirst({
             where: {
-                id: params.id,
+                id,
                 sellerId: session.user.sellerId,
             },
             include: {
@@ -59,10 +60,11 @@ export async function GET(
 // PATCH /api/customers/[id] - Update customer
 export async function PATCH(
     request: Request,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
         const session = await auth();
+        const { id } = await params;
 
         if (!session?.user?.sellerId) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -79,7 +81,7 @@ export async function PATCH(
         // Verify customer belongs to seller
         const existingCustomer = await prisma.customer.findFirst({
             where: {
-                id: params.id,
+                id,
                 sellerId: session.user.sellerId,
             },
         });
@@ -97,7 +99,7 @@ export async function PATCH(
                 where: {
                     sellerId: session.user.sellerId,
                     phone: phone,
-                    id: { not: params.id },
+                    id: { not: id },
                 },
             });
 
@@ -111,7 +113,7 @@ export async function PATCH(
 
         // Update customer
         const customer = await prisma.customer.update({
-            where: { id: params.id },
+            where: { id },
             data: {
                 ...(name && { name }),
                 ...(phone && { phone }),
@@ -132,10 +134,11 @@ export async function PATCH(
 // DELETE /api/customers/[id] - Delete customer
 export async function DELETE(
     request: Request,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
         const session = await auth();
+        const { id } = await params;
 
         if (!session?.user?.sellerId) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -149,7 +152,7 @@ export async function DELETE(
         // Verify customer belongs to seller
         const customer = await prisma.customer.findFirst({
             where: {
-                id: params.id,
+                id,
                 sellerId: session.user.sellerId,
             },
             include: {
@@ -181,7 +184,7 @@ export async function DELETE(
 
         // Delete customer
         await prisma.customer.delete({
-            where: { id: params.id },
+            where: { id },
         });
 
         return NextResponse.json({ success: true });

@@ -5,10 +5,11 @@ import { prisma } from "@/lib/db";
 // GET /api/sales/[id] - Fetch single sale with details
 export async function GET(
     request: Request,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
         const session = await auth();
+        const { id } = await params;
 
         if (!session?.user?.sellerId) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -16,7 +17,7 @@ export async function GET(
 
         const sale = await prisma.sale.findFirst({
             where: {
-                id: params.id,
+                id,
                 sellerId: session.user.sellerId,
             },
             include: {
@@ -35,7 +36,6 @@ export async function GET(
                         shopName: true,
                         address: true,
                         phone: true,
-                        gstNumber: true,
                     },
                 },
             },

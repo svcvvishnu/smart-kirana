@@ -18,6 +18,7 @@ interface Product {
     name: string;
     categoryId: string;
     category: {
+        id: string;
         name: string;
     };
     sellingPrice: number;
