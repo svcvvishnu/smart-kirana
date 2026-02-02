@@ -2,12 +2,11 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { CustomerForm } from "@/components/customers/customer-form";
 import { CustomerList } from "@/components/customers/customer-list";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Search, Users, Home } from "lucide-react";
+import { Plus, Search, Users } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 
 interface Customer {
@@ -81,63 +80,50 @@ export function CustomersClient({ initialCustomers }: CustomersClientProps) {
     });
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-            {/* Header */}
-            <div className="border-b bg-gradient-to-r from-indigo-600 to-cyan-600 text-white shadow-lg">
-                <div className="container mx-auto px-4 py-8">
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-4">
-                            <Link href="/dashboard">
-                                <Button variant="ghost" size="sm" className="text-white hover:bg-white/20">
-                                    <Home className="h-4 w-4" />
-                                </Button>
-                            </Link>
-                            <div>
-                                <h1 className="text-3xl font-bold flex items-center gap-2">
-                                    <Users className="h-8 w-8" />
-                                    Customers
-                                </h1>
-                                <p className="text-indigo-100 mt-1">
-                                    Manage customer information and history
-                                </p>
-                            </div>
-                        </div>
-                        <CustomerForm
-                            onSubmit={handleCreateCustomer}
-                            trigger={
-                                <Button variant="secondary" size="lg">
-                                    <Plus className="h-5 w-5 mr-2" />
-                                    Add Customer
-                                </Button>
-                            }
-                        />
-                    </div>
+        <div className="p-6">
+            {/* Page Header */}
+            <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div>
+                    <h1 className="text-2xl font-semibold tracking-tight text-gray-900 flex items-center gap-2">
+                        <Users className="h-6 w-6 text-indigo-600" />
+                        Customers
+                    </h1>
+                    <p className="mt-1 text-sm text-gray-500">
+                        Manage customer information and history
+                    </p>
                 </div>
-            </div>
-
-            <div className="container mx-auto px-4 py-8">
-                {/* Search */}
-                <Card className="mb-6">
-                    <CardContent className="p-6">
-                        <div className="relative">
-                            <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                            <Input
-                                placeholder="Search by name or phone..."
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                className="pl-9"
-                            />
-                        </div>
-                    </CardContent>
-                </Card>
-
-                {/* Customer List */}
-                <CustomerList
-                    customers={filteredCustomers}
-                    onUpdate={handleUpdateCustomer}
-                    onDelete={handleDeleteCustomer}
+                <CustomerForm
+                    onSubmit={handleCreateCustomer}
+                    trigger={
+                        <Button className="bg-indigo-600 hover:bg-indigo-700">
+                            <Plus className="h-4 w-4 mr-2" />
+                            Add Customer
+                        </Button>
+                    }
                 />
             </div>
+
+            {/* Search */}
+            <Card className="mb-6">
+                <CardContent className="p-4">
+                    <div className="relative">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                        <Input
+                            placeholder="Search by name or phone..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="pl-10"
+                        />
+                    </div>
+                </CardContent>
+            </Card>
+
+            {/* Customer List */}
+            <CustomerList
+                customers={filteredCustomers}
+                onUpdate={handleUpdateCustomer}
+                onDelete={handleDeleteCustomer}
+            />
         </div>
     );
 }

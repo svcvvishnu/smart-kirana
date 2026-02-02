@@ -4,7 +4,8 @@ import { prisma } from "@/lib/db";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Package, TrendingUp, Users, AlertTriangle, ShoppingCart, BarChart3 } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
-import { LogoutButton } from "@/components/LogoutButton";
+import { AppShell, PageHeader, StatCard, StatGrid } from "@/components/layout";
+import Link from "next/link";
 
 export default async function DashboardPage() {
     const session = await auth();
@@ -19,108 +20,96 @@ export default async function DashboardPage() {
     const stats = await getDashboardStats(user.sellerId, user.role);
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-            <div className="border-b bg-white shadow-sm">
-                <div className="container mx-auto px-4 py-6">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <h1 className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-cyan-600 bg-clip-text text-transparent">
-                                Smart Kirana
-                            </h1>
-                            <p className="text-sm text-muted-foreground mt-1">
-                                Welcome back, {user.name}
-                            </p>
-                        </div>
-                        <div className="flex items-center gap-4">
-                            <div className="text-right">
-                                <p className="text-sm font-medium text-muted-foreground">Role</p>
-                                <p className="text-lg font-semibold capitalize">{user.role.toLowerCase()}</p>
-                            </div>
-                            <LogoutButton />
-                        </div>
-                    </div>
-                </div>
-            </div>
+        <AppShell user={{ name: user.name || "User", role: user.role as "OWNER" | "OPERATIONS" }}>
+            <div className="p-6">
+                <PageHeader
+                    title={`Welcome back, ${user.name}`}
+                    description="Here's your business overview for today"
+                />
 
-            <div className="container mx-auto px-4 py-8">
-                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+                <StatGrid columns={4}>
                     <StatCard
                         title="Total Sales"
                         value={formatCurrency(stats.totalSales)}
-                        icon={<ShoppingCart className="h-5 w-5" />}
-                        trend="+12% from last month"
+                        icon={ShoppingCart}
+                        trend={{ value: "+12%", type: "up" }}
+                        subtitle="from last month"
                     />
                     <StatCard
                         title="Total Products"
                         value={stats.totalProducts.toString()}
-                        icon={<Package className="h-5 w-5" />}
-                        trend={`${stats.lowStockCount} low stock`}
+                        icon={Package}
+                        subtitle={`${stats.lowStockCount} low stock`}
                     />
                     {user.role === "OWNER" && (
                         <>
                             <StatCard
                                 title="Total Profit"
                                 value={formatCurrency(stats.totalProfit)}
-                                icon={<TrendingUp className="h-5 w-5" />}
-                                trend="+8% from last month"
-                                highlight
+                                icon={TrendingUp}
+                                trend={{ value: "+8%", type: "up" }}
+                                subtitle="from last month"
+                                variant="primary"
                             />
                             <StatCard
                                 title="Customers"
                                 value={stats.totalCustomers.toString()}
-                                icon={<Users className="h-5 w-5" />}
-                                trend={`${stats.activeCustomers} active`}
+                                icon={Users}
+                                subtitle={`${stats.activeCustomers} active`}
                             />
                         </>
                     )}
-                </div>
+                </StatGrid>
 
                 {stats.lowStockCount > 0 && (
-                    <Card className="mt-6 border-yellow-200 bg-yellow-50">
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-2 text-yellow-900">
+                    <Card className="mt-6 border-amber-200 bg-amber-50">
+                        <CardHeader className="pb-2">
+                            <CardTitle className="flex items-center gap-2 text-amber-800 text-base">
                                 <AlertTriangle className="h-5 w-5" />
                                 Low Stock Alert
                             </CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <p className="text-sm text-yellow-800">
-                                You have {stats.lowStockCount} product(s) running low on stock. Please restock soon.
+                            <p className="text-sm text-amber-700">
+                                You have {stats.lowStockCount} product(s) running low on stock. 
+                                <Link href="/inventory" className="ml-1 font-medium underline hover:no-underline">
+                                    View inventory
+                                </Link>
                             </p>
                         </CardContent>
                     </Card>
                 )}
 
-                <div className="mt-8 grid gap-6 md:grid-cols-2">
+                <div className="mt-6 grid gap-6 md:grid-cols-2">
                     <Card>
                         <CardHeader>
-                            <CardTitle className="flex items-center gap-2">
-                                <BarChart3 className="h-5 w-5" />
+                            <CardTitle className="flex items-center gap-2 text-base">
+                                <BarChart3 className="h-5 w-5 text-gray-500" />
                                 Quick Actions
                             </CardTitle>
                         </CardHeader>
-                        <CardContent className="space-y-3">
-                            {user.role === "OPERATIONS" || user.role === "OWNER" ? (
+                        <CardContent className="space-y-2">
+                            {(user.role === "OPERATIONS" || user.role === "OWNER") && (
                                 <>
                                     <ActionButton href="/billing" label="Create New Bill" />
                                     <ActionButton href="/sales" label="View Sales History" />
                                 </>
-                            ) : null}
-                            {user.role === "OWNER" ? (
+                            )}
+                            {user.role === "OWNER" && (
                                 <>
                                     <ActionButton href="/products" label="Manage Products" />
                                     <ActionButton href="/inventory" label="Update Stock" />
                                     <ActionButton href="/customers" label="View Customers" />
                                 </>
-                            ) : null}
+                            )}
                         </CardContent>
                     </Card>
 
                     <Card>
                         <CardHeader>
-                            <CardTitle>Business Tools</CardTitle>
+                            <CardTitle className="text-base">Business Tools</CardTitle>
                         </CardHeader>
-                        <CardContent className="space-y-3">
+                        <CardContent className="space-y-2">
                             {user.role === "OWNER" && (
                                 <>
                                     <ActionButton href="/analytics" label="View Analytics" />
@@ -130,7 +119,7 @@ export default async function DashboardPage() {
                                 </>
                             )}
                             {user.role === "OPERATIONS" && (
-                                <p className="text-sm text-muted-foreground">
+                                <p className="text-sm text-gray-500 py-4">
                                     Contact shop owner for access to analytics and reports.
                                 </p>
                             )}
@@ -138,53 +127,19 @@ export default async function DashboardPage() {
                     </Card>
                 </div>
             </div>
-        </div>
-    );
-}
-
-function StatCard({
-    title,
-    value,
-    icon,
-    trend,
-    highlight = false
-}: {
-    title: string;
-    value: string;
-    icon: React.ReactNode;
-    trend?: string;
-    highlight?: boolean;
-}) {
-    return (
-        <Card className={highlight ? "border-indigo-200 bg-gradient-to-br from-indigo-50 to-cyan-50" : ""}>
-            <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                        <p className="text-sm font-medium text-muted-foreground">{title}</p>
-                        <p className="text-2xl font-bold mt-2">{value}</p>
-                        {trend && (
-                            <p className="text-xs text-muted-foreground mt-2">{trend}</p>
-                        )}
-                    </div>
-                    <div className={`p-3 rounded-xl ${highlight ? 'bg-gradient-to-br from-indigo-600 to-cyan-600' : 'bg-gray-100'}`}>
-                        <div className={highlight ? 'text-white' : 'text-gray-600'}>
-                            {icon}
-                        </div>
-                    </div>
-                </div>
-            </CardContent>
-        </Card>
+        </AppShell>
     );
 }
 
 function ActionButton({ href, label }: { href: string; label: string }) {
     return (
-        <a
+        <Link
             href={href}
-            className="block px-4 py-3 bg-white hover:bg-gray-50 border rounded-lg transition-colors text-sm font-medium"
+            className="flex items-center justify-between px-4 py-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors text-sm font-medium text-gray-700 group"
         >
-            {label} →
-        </a>
+            <span>{label}</span>
+            <span className="text-gray-400 group-hover:text-gray-600 transition-colors">→</span>
+        </Link>
     );
 }
 
@@ -220,7 +175,6 @@ async function getDashboardStats(sellerId: string | null, role: string) {
         }),
     ]);
 
-
     const totalSales = sales.reduce((sum: number, sale: { total: number }) => sum + sale.total, 0);
     const totalProfit = sales.reduce((sum: number, sale: { profit: number }) => sum + sale.profit, 0);
     const lowStockCount = products.filter(
@@ -232,8 +186,7 @@ async function getDashboardStats(sellerId: string | null, role: string) {
         totalProducts: products.length,
         totalProfit,
         totalCustomers: customers,
-        activeCustomers: Math.floor(customers * 0.7), // Mock data
+        activeCustomers: Math.floor(customers * 0.7),
         lowStockCount,
     };
 }
-

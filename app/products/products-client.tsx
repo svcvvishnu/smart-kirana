@@ -2,13 +2,19 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { ProductForm } from "@/components/products/product-form";
 import { ProductList } from "@/components/products/product-list";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Search, Package, Home } from "lucide-react";
+import { Plus, Search, Package } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
 
 interface Category {
     id: string;
@@ -117,95 +123,74 @@ export function ProductsClient({
     });
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-            {/* Header */}
-            <div className="border-b bg-gradient-to-r from-indigo-600 to-cyan-600 text-white shadow-lg">
-                <div className="container mx-auto px-4 py-8">
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-4">
-                            <Link href="/dashboard">
-                                <Button variant="ghost" size="sm" className="text-white hover:bg-white/20">
-                                    <Home className="h-4 w-4" />
-                                </Button>
-                            </Link>
-                            <div>
-                                <h1 className="text-3xl font-bold flex items-center gap-2">
-                                    <Package className="h-8 w-8" />
-                                    Products
-                                </h1>
-                                <p className="text-indigo-100 mt-1">
-                                    Manage your inventory and pricing
-                                </p>
-                            </div>
-                        </div>
-                        <ProductForm
-                            categories={categories}
-                            onSubmit={handleCreateProduct}
-                            onCategoryCreate={handleCreateCategory}
-                            trigger={
-                                <Button variant="secondary" size="lg">
-                                    <Plus className="h-5 w-5 mr-2" />
-                                    Add Product
-                                </Button>
-                            }
-                        />
-                    </div>
+        <div className="p-6">
+            {/* Page Header */}
+            <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div>
+                    <h1 className="text-2xl font-semibold tracking-tight text-gray-900 flex items-center gap-2">
+                        <Package className="h-6 w-6 text-indigo-600" />
+                        Products
+                    </h1>
+                    <p className="mt-1 text-sm text-gray-500">
+                        Manage your inventory and pricing
+                    </p>
                 </div>
-            </div>
-
-            <div className="container mx-auto px-4 py-8">
-                {/* Filters */}
-                <Card className="mb-6">
-                    <CardContent className="p-6">
-                        <div className="flex flex-col md:flex-row gap-4">
-                            <div className="flex-1 relative">
-                                <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                                <Input
-                                    placeholder="Search products..."
-                                    value={searchQuery}
-                                    onChange={(e) => setSearchQuery(e.target.value)}
-                                    className="pl-9"
-                                />
-                            </div>
-                            <div className="flex gap-2 flex-wrap">
-                                <Button
-                                    variant={selectedCategory === null ? "default" : "outline"}
-                                    onClick={() => setSelectedCategory(null)}
-                                    size="sm"
-                                >
-                                    All ({products.length})
-                                </Button>
-                                {categories.map((cat) => {
-                                    const count = products.filter(
-                                        (p) => p.categoryId === cat.id
-                                    ).length;
-                                    return (
-                                        <Button
-                                            key={cat.id}
-                                            variant={
-                                                selectedCategory === cat.id ? "default" : "outline"
-                                            }
-                                            onClick={() => setSelectedCategory(cat.id)}
-                                            size="sm"
-                                        >
-                                            {cat.name} ({count})
-                                        </Button>
-                                    );
-                                })}
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
-
-                {/* Products Table */}
-                <ProductList
-                    products={filteredProducts}
+                <ProductForm
                     categories={categories}
-                    onUpdate={handleUpdateProduct}
-                    onDelete={handleDeleteProduct}
+                    onSubmit={handleCreateProduct}
                     onCategoryCreate={handleCreateCategory}
+                    trigger={
+                        <Button className="bg-indigo-600 hover:bg-indigo-700">
+                            <Plus className="h-4 w-4 mr-2" />
+                            Add Product
+                        </Button>
+                    }
                 />
             </div>
+
+            {/* Filters */}
+            <Card className="mb-6">
+                <CardContent className="p-4">
+                    <div className="flex flex-col sm:flex-row gap-4">
+                        <div className="relative flex-1">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                            <Input
+                                placeholder="Search products..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="pl-10"
+                            />
+                        </div>
+                        <Select
+                            value={selectedCategory || "all"}
+                            onValueChange={(value) =>
+                                setSelectedCategory(value === "all" ? null : value)
+                            }
+                        >
+                            <SelectTrigger className="w-full sm:w-48">
+                                <SelectValue placeholder="All Categories" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">All Categories</SelectItem>
+                                {categories.map((category) => (
+                                    <SelectItem key={category.id} value={category.id}>
+                                        {category.name}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                </CardContent>
+            </Card>
+
+            {/* Products List */}
+            <ProductList
+                products={filteredProducts}
+                categories={categories}
+                onUpdate={handleUpdateProduct}
+                onDelete={handleDeleteProduct}
+                onCategoryCreate={handleCreateCategory}
+            />
         </div>
     );
 }

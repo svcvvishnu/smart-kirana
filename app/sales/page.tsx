@@ -2,6 +2,7 @@ import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { SalesClient } from "./sales-client";
+import { AppShell } from "@/components/layout";
 
 export default async function SalesPage() {
     const session = await auth();
@@ -80,11 +81,13 @@ export default async function SalesPage() {
     };
 
     return (
-        <SalesClient 
-            initialSales={sales} 
-            customers={customers} 
-            stats={stats}
-            userRole={session.user.role}
-        />
+        <AppShell user={{ name: session.user.name || "User", role: session.user.role as "OWNER" | "OPERATIONS" }}>
+            <SalesClient 
+                initialSales={sales} 
+                customers={customers} 
+                stats={stats}
+                userRole={session.user.role}
+            />
+        </AppShell>
     );
 }

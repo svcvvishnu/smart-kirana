@@ -2,6 +2,7 @@ import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { ProductsClient } from "./products-client";
+import { AppShell } from "@/components/layout";
 
 export default async function ProductsPage() {
     const session = await auth();
@@ -48,5 +49,9 @@ export default async function ProductsPage() {
         }),
     ]);
 
-    return <ProductsClient initialProducts={products} initialCategories={categories} />;
+    return (
+        <AppShell user={{ name: session.user.name || "User", role: session.user.role as "OWNER" }}>
+            <ProductsClient initialProducts={products} initialCategories={categories} />
+        </AppShell>
+    );
 }

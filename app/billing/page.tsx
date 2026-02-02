@@ -2,6 +2,7 @@ import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { BillingClient } from "./billing-client";
+import { AppShell } from "@/components/layout";
 
 export default async function BillingPage() {
     const session = await auth();
@@ -26,7 +27,7 @@ export default async function BillingPage() {
                 sellerId: session.user.sellerId,
                 isActive: true,
                 currentStock: {
-                    gt: 0, // Only show products with stock
+                    gt: 0,
                 },
             },
             include: {
@@ -64,5 +65,9 @@ export default async function BillingPage() {
         }),
     ]);
 
-    return <BillingClient products={products} categories={categories} customers={customers} />;
+    return (
+        <AppShell user={{ name: session.user.name || "User", role: session.user.role as "OWNER" | "OPERATIONS" }}>
+            <BillingClient products={products} categories={categories} customers={customers} />
+        </AppShell>
+    );
 }

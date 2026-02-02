@@ -2,6 +2,7 @@ import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { InventoryClient } from "./inventory-client";
+import { AppShell } from "@/components/layout";
 
 export default async function InventoryPage() {
     const session = await auth();
@@ -71,14 +72,16 @@ export default async function InventoryPage() {
     const outOfStockCount = stats.filter((p: typeof stats[number]) => p.currentStock === 0).length;
 
     return (
-        <InventoryClient
-            products={products}
-            initialTransactions={transactions}
-            stats={{
-                totalProducts,
-                lowStockCount,
-                outOfStockCount,
-            }}
-        />
+        <AppShell user={{ name: session.user.name || "User", role: session.user.role as "OWNER" }}>
+            <InventoryClient
+                products={products}
+                initialTransactions={transactions}
+                stats={{
+                    totalProducts,
+                    lowStockCount,
+                    outOfStockCount,
+                }}
+            />
+        </AppShell>
     );
 }

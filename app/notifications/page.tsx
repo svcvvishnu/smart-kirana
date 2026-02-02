@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { NotificationsClient } from "./notifications-client";
 import { checkAndCreateStockAlerts } from "@/lib/notifications";
+import { AppShell } from "@/components/layout";
 
 export default async function NotificationsPage() {
     const session = await auth();
@@ -31,9 +32,11 @@ export default async function NotificationsPage() {
     });
 
     return (
-        <NotificationsClient
-            initialNotifications={notifications}
-            initialUnreadCount={unreadCount}
-        />
+        <AppShell user={{ name: session.user.name || "User", role: session.user.role as "OWNER" | "OPERATIONS" }}>
+            <NotificationsClient
+                initialNotifications={notifications}
+                initialUnreadCount={unreadCount}
+            />
+        </AppShell>
     );
 }

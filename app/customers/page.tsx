@@ -2,6 +2,7 @@ import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { CustomersClient } from "./customers-client";
+import { AppShell } from "@/components/layout";
 
 export default async function CustomersPage() {
     const session = await auth();
@@ -70,5 +71,9 @@ export default async function CustomersPage() {
         })
     );
 
-    return <CustomersClient initialCustomers={customersWithStats} />;
+    return (
+        <AppShell user={{ name: session.user.name || "User", role: session.user.role as "OWNER" }}>
+            <CustomersClient initialCustomers={customersWithStats} />
+        </AppShell>
+    );
 }

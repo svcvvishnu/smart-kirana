@@ -2,6 +2,7 @@ import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { ExpensesClient } from "./expenses-client";
+import { AppShell } from "@/components/layout";
 
 export default async function ExpensesPage() {
     const session = await auth();
@@ -70,5 +71,9 @@ export default async function ExpensesPage() {
         })),
     };
 
-    return <ExpensesClient initialExpenses={expenses} stats={stats} />;
+    return (
+        <AppShell user={{ name: session.user.name || "User", role: session.user.role as "OWNER" }}>
+            <ExpensesClient initialExpenses={expenses} stats={stats} />
+        </AppShell>
+    );
 }

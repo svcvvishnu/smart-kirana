@@ -20,6 +20,20 @@ async function main() {
     });
     console.log("✅ Created admin user");
 
+    // Create Support User
+    const supportPassword = await bcrypt.hash("support123", 10);
+    const support = await prisma.user.upsert({
+        where: { email: "support@smartkirana.com" },
+        update: {},
+        create: {
+            email: "support@smartkirana.com",
+            password: supportPassword,
+            name: "Support User",
+            role: "SUPPORT",
+        },
+    });
+    console.log("✅ Created support user");
+
     // Create Subscription Plans
     const freePlan = await prisma.subscriptionPlan.upsert({
         where: { tier: "FREE" },
@@ -225,15 +239,20 @@ async function main() {
     console.log("\n🎉 Database seeded successfully!");
     console.log("\n📝 Test Credentials:");
     console.log("━".repeat(50));
-    console.log("Owner Account:");
-    console.log("  Email: owner@test.com");
-    console.log("  Password: password123");
-    console.log("\nOperations Account:");
-    console.log("  Email: cashier@test.com");
-    console.log("  Password: password123");
-    console.log("\nAdmin Account:");
-    console.log("  Email: admin@smartkirana.com");
-    console.log("  Password: admin123");
+    console.log("SELLER USERS (Shop: Demo General Store):");
+    console.log("  Owner Account:");
+    console.log("    Email: owner@test.com");
+    console.log("    Password: password123");
+    console.log("  Operations/Cashier Account:");
+    console.log("    Email: cashier@test.com");
+    console.log("    Password: password123");
+    console.log("\nPLATFORM USERS:");
+    console.log("  Admin Account:");
+    console.log("    Email: admin@smartkirana.com");
+    console.log("    Password: admin123");
+    console.log("  Support Account:");
+    console.log("    Email: support@smartkirana.com");
+    console.log("    Password: support123");
     console.log("━".repeat(50));
 }
 

@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -25,7 +24,6 @@ import {
 } from "@/components/ui/dialog";
 import {
     Wallet,
-    Home,
     Plus,
     Trash2,
     Edit,
@@ -199,41 +197,28 @@ export function ExpensesClient({ initialExpenses, stats }: ExpensesClientProps) 
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-rose-50 to-pink-50">
-            {/* Header */}
-            <div className="border-b bg-gradient-to-r from-rose-600 to-pink-600 text-white shadow-lg">
-                <div className="container mx-auto px-4 py-8">
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-4">
-                            <Link href="/dashboard">
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    className="text-white hover:bg-white/20"
-                                >
-                                    <Home className="h-4 w-4" />
-                                </Button>
-                            </Link>
-                            <div>
-                                <h1 className="text-3xl font-bold flex items-center gap-2">
-                                    <Wallet className="h-8 w-8" />
-                                    Expenses
-                                </h1>
-                                <p className="text-rose-100 mt-1">
-                                    Track your business expenses
-                                </p>
-                            </div>
-                        </div>
-                        <Dialog open={isDialogOpen} onOpenChange={(open) => {
-                            setIsDialogOpen(open);
-                            if (!open) resetForm();
-                        }}>
-                            <DialogTrigger asChild>
-                                <Button variant="secondary" size="lg">
-                                    <Plus className="h-5 w-5 mr-2" />
-                                    Add Expense
-                                </Button>
-                            </DialogTrigger>
+        <div className="p-6">
+            {/* Page Header */}
+            <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div>
+                    <h1 className="text-2xl font-semibold tracking-tight text-gray-900 flex items-center gap-2">
+                        <Receipt className="h-6 w-6 text-indigo-600" />
+                        Expenses
+                    </h1>
+                    <p className="mt-1 text-sm text-gray-500">
+                        Track your business expenses
+                    </p>
+                </div>
+                <Dialog open={isDialogOpen} onOpenChange={(open) => {
+                    setIsDialogOpen(open);
+                    if (!open) resetForm();
+                }}>
+                    <DialogTrigger asChild>
+                        <Button className="bg-indigo-600 hover:bg-indigo-700">
+                            <Plus className="h-4 w-4 mr-2" />
+                            Add Expense
+                        </Button>
+                    </DialogTrigger>
                             <DialogContent>
                                 <form onSubmit={handleSubmit}>
                                     <DialogHeader>
@@ -322,159 +307,141 @@ export function ExpensesClient({ initialExpenses, stats }: ExpensesClientProps) 
                                 </form>
                             </DialogContent>
                         </Dialog>
-                    </div>
-                </div>
             </div>
 
-            <div className="container mx-auto px-4 py-8">
-                {/* Stats Cards */}
-                <div className="grid gap-6 md:grid-cols-4 mb-6">
-                    <Card>
-                        <CardContent className="p-6">
-                            <p className="text-sm font-medium text-muted-foreground">
-                                This Month
-                            </p>
-                            <p className="text-2xl font-bold mt-2 text-rose-600">
-                                {formatCurrency(stats.monthlyTotal)}
-                            </p>
-                            <p className="text-xs text-muted-foreground mt-1">
-                                {stats.monthlyCount} expense(s)
-                            </p>
-                        </CardContent>
-                    </Card>
-                    <Card>
-                        <CardContent className="p-6">
-                            <p className="text-sm font-medium text-muted-foreground">
-                                All Time
-                            </p>
-                            <p className="text-2xl font-bold mt-2">
-                                {formatCurrency(stats.allTimeTotal)}
-                            </p>
-                            <p className="text-xs text-muted-foreground mt-1">
-                                {stats.allTimeCount} expense(s)
-                            </p>
-                        </CardContent>
-                    </Card>
-                    {stats.categoryBreakdown.slice(0, 2).map((cat) => (
-                        <Card key={cat.category}>
-                            <CardContent className="p-6">
-                                <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-                                    {getCategoryIcon(cat.category)}
-                                    {getCategoryLabel(cat.category)}
-                                </div>
-                                <p className="text-2xl font-bold mt-2">
-                                    {formatCurrency(cat.amount)}
-                                </p>
-                                <p className="text-xs text-muted-foreground mt-1">
-                                    This month
-                                </p>
-                            </CardContent>
-                        </Card>
-                    ))}
-                </div>
-
-                {/* Filters */}
-                <Card className="mb-6">
-                    <CardContent className="p-6">
-                        <div className="flex flex-col md:flex-row gap-4">
-                            <div className="flex-1 relative">
-                                <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                                <Input
-                                    placeholder="Search expenses..."
-                                    value={searchQuery}
-                                    onChange={(e) => setSearchQuery(e.target.value)}
-                                    className="pl-9"
-                                />
-                            </div>
-                            <Select
-                                value={categoryFilter || "all"}
-                                onValueChange={(value) =>
-                                    setCategoryFilter(value === "all" ? null : value)
-                                }
-                            >
-                                <SelectTrigger className="w-[200px]">
-                                    <SelectValue placeholder="All Categories" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="all">All Categories</SelectItem>
-                                    {EXPENSE_CATEGORIES.map((cat) => (
-                                        <SelectItem key={cat.value} value={cat.value}>
-                                            {cat.label}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
+            {/* Stats Cards */}
+            <div className="grid gap-4 md:grid-cols-4 mb-6">
+                <Card className="border-rose-200 bg-rose-50">
+                    <CardContent className="p-4">
+                        <p className="text-sm font-medium text-rose-700">This Month</p>
+                        <p className="text-2xl font-semibold mt-1 text-rose-900">
+                            {formatCurrency(stats.monthlyTotal)}
+                        </p>
+                        <p className="text-xs text-rose-600 mt-1">
+                            {stats.monthlyCount} expense(s)
+                        </p>
                     </CardContent>
                 </Card>
-
-                {/* Expenses List */}
                 <Card>
-                    <CardHeader>
-                        <CardTitle>Expense Records ({filteredExpenses.length})</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        {filteredExpenses.length === 0 ? (
-                            <div className="text-center py-12">
-                                <Wallet className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                                <p className="text-muted-foreground">No expenses found.</p>
-                                <p className="text-sm text-muted-foreground mt-2">
-                                    Add your first expense to get started.
-                                </p>
+                    <CardContent className="p-4">
+                        <p className="text-sm font-medium text-gray-500">All Time</p>
+                        <p className="text-2xl font-semibold mt-1">
+                            {formatCurrency(stats.allTimeTotal)}
+                        </p>
+                        <p className="text-xs text-gray-500 mt-1">
+                            {stats.allTimeCount} expense(s)
+                        </p>
+                    </CardContent>
+                </Card>
+                {stats.categoryBreakdown.slice(0, 2).map((cat) => (
+                    <Card key={cat.category}>
+                        <CardContent className="p-4">
+                            <div className="flex items-center gap-2 text-sm font-medium text-gray-500">
+                                {getCategoryIcon(cat.category)}
+                                {getCategoryLabel(cat.category)}
                             </div>
-                        ) : (
-                            <div className="space-y-3">
-                                {filteredExpenses.map((expense) => (
-                                    <div
-                                        key={expense.id}
-                                        className="flex items-center justify-between p-4 rounded-lg border bg-white hover:bg-gray-50 transition-colors"
-                                    >
-                                        <div className="flex items-center gap-4">
-                                            <div className="p-2 rounded-lg bg-rose-100 text-rose-600">
-                                                {getCategoryIcon(expense.category)}
-                                            </div>
-                                            <div>
-                                                <p className="font-medium">
-                                                    {getCategoryLabel(expense.category)}
-                                                </p>
-                                                {expense.description && (
-                                                    <p className="text-sm text-muted-foreground">
-                                                        {expense.description}
-                                                    </p>
-                                                )}
-                                                <p className="text-xs text-muted-foreground">
-                                                    {format(new Date(expense.date), "MMM dd, yyyy")}
-                                                </p>
-                                            </div>
+                            <p className="text-2xl font-semibold mt-1">
+                                {formatCurrency(cat.amount)}
+                            </p>
+                            <p className="text-xs text-gray-500 mt-1">This month</p>
+                        </CardContent>
+                    </Card>
+                ))}
+            </div>
+
+            {/* Filters */}
+            <Card className="mb-6">
+                <CardContent className="p-4">
+                    <div className="flex flex-col md:flex-row gap-4">
+                        <div className="flex-1 relative">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                            <Input
+                                placeholder="Search expenses..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="pl-10"
+                            />
+                        </div>
+                        <Select
+                            value={categoryFilter || "all"}
+                            onValueChange={(value) =>
+                                setCategoryFilter(value === "all" ? null : value)
+                            }
+                        >
+                            <SelectTrigger className="w-full md:w-48">
+                                <SelectValue placeholder="All Categories" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">All Categories</SelectItem>
+                                {EXPENSE_CATEGORIES.map((cat) => (
+                                    <SelectItem key={cat.value} value={cat.value}>
+                                        {cat.label}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                </CardContent>
+            </Card>
+
+            {/* Expenses List */}
+            <Card>
+                <CardHeader className="pb-3">
+                    <CardTitle className="text-base">Expense Records ({filteredExpenses.length})</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    {filteredExpenses.length === 0 ? (
+                        <div className="text-center py-12">
+                            <Wallet className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                            <p className="text-gray-500">No expenses found.</p>
+                            <p className="text-sm text-gray-400 mt-2">
+                                Add your first expense to get started.
+                            </p>
+                        </div>
+                    ) : (
+                        <div className="space-y-3">
+                            {filteredExpenses.map((expense) => (
+                                <div
+                                    key={expense.id}
+                                    className="flex items-center justify-between p-4 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors"
+                                >
+                                    <div className="flex items-center gap-4">
+                                        <div className="p-2 rounded-lg bg-rose-100 text-rose-600">
+                                            {getCategoryIcon(expense.category)}
                                         </div>
-                                        <div className="flex items-center gap-4">
-                                            <p className="font-semibold text-rose-600">
-                                                -{formatCurrency(expense.amount)}
+                                        <div>
+                                            <p className="font-medium text-sm">
+                                                {getCategoryLabel(expense.category)}
                                             </p>
-                                            <div className="flex gap-1">
-                                                <Button
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    onClick={() => handleEdit(expense)}
-                                                >
-                                                    <Edit className="h-4 w-4" />
-                                                </Button>
-                                                <Button
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    onClick={() => setDeleteId(expense.id)}
-                                                >
-                                                    <Trash2 className="h-4 w-4" />
-                                                </Button>
-                                            </div>
+                                            {expense.description && (
+                                                <p className="text-sm text-gray-500">
+                                                    {expense.description}
+                                                </p>
+                                            )}
+                                            <p className="text-xs text-gray-400">
+                                                {format(new Date(expense.date), "MMM dd, yyyy")}
+                                            </p>
                                         </div>
                                     </div>
-                                ))}
-                            </div>
-                        )}
-                    </CardContent>
-                </Card>
-            </div>
+                                    <div className="flex items-center gap-4">
+                                        <p className="font-semibold text-rose-600">
+                                            -{formatCurrency(expense.amount)}
+                                        </p>
+                                        <div className="flex gap-1">
+                                            <Button variant="ghost" size="sm" onClick={() => handleEdit(expense)}>
+                                                <Edit className="h-4 w-4" />
+                                            </Button>
+                                            <Button variant="ghost" size="sm" onClick={() => setDeleteId(expense.id)}>
+                                                <Trash2 className="h-4 w-4" />
+                                            </Button>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </CardContent>
+            </Card>
 
             {/* Delete Confirmation Dialog */}
             <Dialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
