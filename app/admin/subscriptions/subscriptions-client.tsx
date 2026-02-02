@@ -30,9 +30,10 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table";
-import { CreditCard, Plus, Edit, Check, X } from "lucide-react";
+import { CreditCard, Plus, Check, X, Sparkles } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import { format } from "date-fns";
+import { PageHeader } from "@/components/layout";
 
 interface SubscriptionPlan {
     id: string;
@@ -145,97 +146,127 @@ export function SubscriptionsClient({
         }
     };
 
+    const getPlanColor = (tier: string) => {
+        switch (tier) {
+            case "FREE":
+                return "from-gray-400 to-gray-500";
+            case "BASIC":
+                return "from-blue-400 to-blue-600";
+            case "PRO":
+                return "from-purple-500 to-purple-700";
+            case "ENTERPRISE":
+                return "from-amber-500 to-orange-600";
+            default:
+                return "from-gray-400 to-gray-500";
+        }
+    };
+
+    const getPlanBadgeColor = (tier: string) => {
+        switch (tier) {
+            case "FREE":
+                return "bg-gray-100 text-gray-700";
+            case "BASIC":
+                return "bg-blue-100 text-blue-700";
+            case "PRO":
+                return "bg-purple-100 text-purple-700";
+            case "ENTERPRISE":
+                return "bg-amber-100 text-amber-700";
+            default:
+                return "bg-gray-100 text-gray-700";
+        }
+    };
+
     return (
-        <div className="p-8">
-            <div className="flex items-center justify-between mb-8">
-                <div>
-                    <h1 className="text-3xl font-bold text-white">Subscriptions</h1>
-                    <p className="text-slate-400 mt-1">Manage plans and assignments</p>
-                </div>
-                <Dialog open={assignDialogOpen} onOpenChange={setAssignDialogOpen}>
-                    <DialogTrigger asChild>
-                        <Button>
-                            <Plus className="h-4 w-4 mr-2" />
-                            Assign Subscription
-                        </Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                        <DialogHeader>
-                            <DialogTitle>Assign Subscription</DialogTitle>
-                            <DialogDescription>
-                                Assign a subscription plan to a seller
-                            </DialogDescription>
-                        </DialogHeader>
-                        <div className="space-y-4 py-4">
-                            <div className="space-y-2">
-                                <Label>Seller</Label>
-                                <Select
-                                    value={assignForm.sellerId}
-                                    onValueChange={(value) =>
-                                        setAssignForm({ ...assignForm, sellerId: value })
-                                    }
-                                >
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Select seller" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {sellersWithoutSub.map((seller) => (
-                                            <SelectItem key={seller.id} value={seller.id}>
-                                                {seller.shopName} - {seller.ownerName}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                            <div className="space-y-2">
-                                <Label>Plan</Label>
-                                <Select
-                                    value={assignForm.planId}
-                                    onValueChange={(value) =>
-                                        setAssignForm({ ...assignForm, planId: value })
-                                    }
-                                >
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Select plan" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {plans.map((plan) => (
-                                            <SelectItem key={plan.id} value={plan.id}>
-                                                {plan.name} - {formatCurrency(plan.price)}/mo
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                        </div>
-                        <DialogFooter>
-                            <Button
-                                variant="outline"
-                                onClick={() => setAssignDialogOpen(false)}
-                            >
-                                Cancel
+        <div className="p-6">
+            <PageHeader
+                title="Subscriptions"
+                description="Manage subscription plans and seller assignments"
+                actions={
+                    <Dialog open={assignDialogOpen} onOpenChange={setAssignDialogOpen}>
+                        <DialogTrigger asChild>
+                            <Button className="bg-purple-600 hover:bg-purple-700">
+                                <Plus className="h-4 w-4 mr-2" />
+                                Assign Subscription
                             </Button>
-                            <Button onClick={handleAssignSubscription} disabled={loading}>
-                                {loading ? "Assigning..." : "Assign"}
-                            </Button>
-                        </DialogFooter>
-                    </DialogContent>
-                </Dialog>
-            </div>
+                        </DialogTrigger>
+                        <DialogContent>
+                            <DialogHeader>
+                                <DialogTitle>Assign Subscription</DialogTitle>
+                                <DialogDescription>
+                                    Assign a subscription plan to a seller
+                                </DialogDescription>
+                            </DialogHeader>
+                            <div className="space-y-4 py-4">
+                                <div className="space-y-2">
+                                    <Label>Seller</Label>
+                                    <Select
+                                        value={assignForm.sellerId}
+                                        onValueChange={(value) =>
+                                            setAssignForm({ ...assignForm, sellerId: value })
+                                        }
+                                    >
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Select seller" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {sellersWithoutSub.map((seller) => (
+                                                <SelectItem key={seller.id} value={seller.id}>
+                                                    {seller.shopName} - {seller.ownerName}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <div className="space-y-2">
+                                    <Label>Plan</Label>
+                                    <Select
+                                        value={assignForm.planId}
+                                        onValueChange={(value) =>
+                                            setAssignForm({ ...assignForm, planId: value })
+                                        }
+                                    >
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Select plan" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {plans.map((plan) => (
+                                                <SelectItem key={plan.id} value={plan.id}>
+                                                    {plan.name} - {formatCurrency(plan.price)}/mo
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                            </div>
+                            <DialogFooter>
+                                <Button
+                                    variant="outline"
+                                    onClick={() => setAssignDialogOpen(false)}
+                                >
+                                    Cancel
+                                </Button>
+                                <Button onClick={handleAssignSubscription} disabled={loading} className="bg-purple-600 hover:bg-purple-700">
+                                    {loading ? "Assigning..." : "Assign"}
+                                </Button>
+                            </DialogFooter>
+                        </DialogContent>
+                    </Dialog>
+                }
+            />
 
             {/* Tab Buttons */}
             <div className="flex gap-2 mb-6">
                 <Button
                     variant={activeTab === "plans" ? "default" : "outline"}
                     onClick={() => setActiveTab("plans")}
-                    className={activeTab !== "plans" ? "text-slate-300" : ""}
+                    className={activeTab === "plans" ? "bg-purple-600 hover:bg-purple-700" : ""}
                 >
                     Subscription Plans
                 </Button>
                 <Button
                     variant={activeTab === "assignments" ? "default" : "outline"}
                     onClick={() => setActiveTab("assignments")}
-                    className={activeTab !== "assignments" ? "text-slate-300" : ""}
+                    className={activeTab === "assignments" ? "bg-purple-600 hover:bg-purple-700" : ""}
                 >
                     Assignments ({subscriptions.length})
                 </Button>
@@ -245,42 +276,44 @@ export function SubscriptionsClient({
             {activeTab === "plans" && (
                 <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
                     {plans.map((plan) => (
-                        <Card key={plan.id} className="bg-slate-800 border-slate-700">
-                            <CardHeader>
+                        <Card key={plan.id} className="relative overflow-hidden border-0 shadow-lg">
+                            {/* Gradient header */}
+                            <div className={`h-2 bg-gradient-to-r ${getPlanColor(plan.tier)}`} />
+                            <CardHeader className="pb-2">
                                 <div className="flex items-center justify-between">
-                                    <CardTitle className="text-white">{plan.name}</CardTitle>
-                                    <span className="px-2 py-1 text-xs rounded bg-slate-700 text-slate-300">
+                                    <CardTitle className="text-lg font-bold text-gray-900">{plan.name}</CardTitle>
+                                    <span className={`px-2.5 py-1 text-xs rounded-full font-medium ${getPlanBadgeColor(plan.tier)}`}>
                                         {plan.tier}
                                     </span>
                                 </div>
                             </CardHeader>
                             <CardContent className="space-y-4">
                                 <div>
-                                    <p className="text-3xl font-bold text-white">
+                                    <p className="text-3xl font-bold text-gray-900">
                                         {formatCurrency(plan.price)}
-                                        <span className="text-sm text-slate-400">/mo</span>
+                                        <span className="text-sm font-normal text-gray-500">/mo</span>
                                     </p>
-                                    <p className="text-sm text-slate-400 mt-1">
-                                        {plan._count.subscriptions} active subscribers
+                                    <p className="text-sm text-gray-500 mt-1">
+                                        {plan._count.subscriptions} active subscriber{plan._count.subscriptions !== 1 ? "s" : ""}
                                     </p>
                                 </div>
 
-                                <div className="space-y-2">
+                                <div className="space-y-2 py-2">
                                     <div className="flex items-center justify-between text-sm">
-                                        <span className="text-slate-400">Max Products</span>
-                                        <span className="text-white">
+                                        <span className="text-gray-500">Max Products</span>
+                                        <span className="font-medium text-gray-900">
                                             {plan.maxProducts || "Unlimited"}
                                         </span>
                                     </div>
                                     <div className="flex items-center justify-between text-sm">
-                                        <span className="text-slate-400">Max Users</span>
-                                        <span className="text-white">
+                                        <span className="text-gray-500">Max Users</span>
+                                        <span className="font-medium text-gray-900">
                                             {plan.maxUsers || "Unlimited"}
                                         </span>
                                     </div>
                                 </div>
 
-                                <div className="pt-4 border-t border-slate-700 space-y-2">
+                                <div className="pt-4 border-t border-gray-100 space-y-2">
                                     <Feature enabled={plan.hasAnalytics} label="Analytics" />
                                     <Feature enabled={plan.hasReports} label="Reports" />
                                     <Feature enabled={plan.hasExports} label="Exports" />
@@ -294,84 +327,83 @@ export function SubscriptionsClient({
 
             {/* Assignments Tab */}
             {activeTab === "assignments" && (
-                <Card className="bg-slate-800 border-slate-700">
-                    <CardHeader>
-                        <CardTitle className="text-white">Subscription Assignments</CardTitle>
+                <Card>
+                    <CardHeader className="border-b">
+                        <CardTitle className="text-lg font-semibold text-gray-900">Subscription Assignments</CardTitle>
                     </CardHeader>
-                    <CardContent>
+                    <CardContent className="p-0">
                         {subscriptions.length === 0 ? (
                             <div className="text-center py-12">
-                                <CreditCard className="h-12 w-12 text-slate-600 mx-auto mb-4" />
-                                <p className="text-slate-400">No subscriptions yet</p>
+                                <CreditCard className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                                <p className="text-gray-500">No subscriptions yet</p>
+                                <p className="text-sm text-gray-400 mt-1">Assign a plan to a seller to get started</p>
                             </div>
                         ) : (
-                            <div className="rounded-md border border-slate-700">
-                                <Table>
-                                    <TableHeader>
-                                        <TableRow className="border-slate-700">
-                                            <TableHead className="text-slate-300">Seller</TableHead>
-                                            <TableHead className="text-slate-300">Current Plan</TableHead>
-                                            <TableHead className="text-slate-300">Status</TableHead>
-                                            <TableHead className="text-slate-300">Since</TableHead>
-                                            <TableHead className="text-slate-300">Change Plan</TableHead>
+                            <Table>
+                                <TableHeader>
+                                    <TableRow className="bg-gray-50">
+                                        <TableHead className="font-semibold text-gray-700">Seller</TableHead>
+                                        <TableHead className="font-semibold text-gray-700">Current Plan</TableHead>
+                                        <TableHead className="font-semibold text-gray-700">Status</TableHead>
+                                        <TableHead className="font-semibold text-gray-700">Since</TableHead>
+                                        <TableHead className="font-semibold text-gray-700">Change Plan</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {subscriptions.map((sub) => (
+                                        <TableRow key={sub.id} className="hover:bg-gray-50">
+                                            <TableCell>
+                                                <div>
+                                                    <p className="font-medium text-gray-900">
+                                                        {sub.seller.shopName}
+                                                    </p>
+                                                    <p className="text-sm text-gray-500">
+                                                        {sub.seller.ownerName}
+                                                    </p>
+                                                </div>
+                                            </TableCell>
+                                            <TableCell>
+                                                <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${getPlanBadgeColor(sub.plan.tier)}`}>
+                                                    {sub.plan.name}
+                                                </span>
+                                            </TableCell>
+                                            <TableCell>
+                                                <span
+                                                    className={`px-2.5 py-1 rounded-full text-xs font-medium ${
+                                                        sub.isActive
+                                                            ? "bg-emerald-100 text-emerald-700"
+                                                            : "bg-red-100 text-red-700"
+                                                    }`}
+                                                >
+                                                    {sub.isActive ? "Active" : "Inactive"}
+                                                </span>
+                                            </TableCell>
+                                            <TableCell className="text-gray-600">
+                                                {format(new Date(sub.createdAt), "MMM dd, yyyy")}
+                                            </TableCell>
+                                            <TableCell>
+                                                <Select
+                                                    value={sub.planId}
+                                                    onValueChange={(value) =>
+                                                        handleChangePlan(sub.id, value)
+                                                    }
+                                                >
+                                                    <SelectTrigger className="w-[140px]">
+                                                        <SelectValue />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        {plans.map((plan) => (
+                                                            <SelectItem key={plan.id} value={plan.id}>
+                                                                {plan.name}
+                                                            </SelectItem>
+                                                        ))}
+                                                    </SelectContent>
+                                                </Select>
+                                            </TableCell>
                                         </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                        {subscriptions.map((sub) => (
-                                            <TableRow key={sub.id} className="border-slate-700">
-                                                <TableCell>
-                                                    <div>
-                                                        <p className="font-medium text-white">
-                                                            {sub.seller.shopName}
-                                                        </p>
-                                                        <p className="text-sm text-slate-400">
-                                                            {sub.seller.ownerName}
-                                                        </p>
-                                                    </div>
-                                                </TableCell>
-                                                <TableCell>
-                                                    <span className="px-2 py-1 rounded text-xs bg-slate-700 text-slate-300">
-                                                        {sub.plan.name}
-                                                    </span>
-                                                </TableCell>
-                                                <TableCell>
-                                                    <span
-                                                        className={`px-2 py-1 rounded text-xs ${
-                                                            sub.isActive
-                                                                ? "bg-emerald-500/20 text-emerald-400"
-                                                                : "bg-red-500/20 text-red-400"
-                                                        }`}
-                                                    >
-                                                        {sub.isActive ? "Active" : "Inactive"}
-                                                    </span>
-                                                </TableCell>
-                                                <TableCell className="text-slate-300">
-                                                    {format(new Date(sub.createdAt), "MMM dd, yyyy")}
-                                                </TableCell>
-                                                <TableCell>
-                                                    <Select
-                                                        value={sub.planId}
-                                                        onValueChange={(value) =>
-                                                            handleChangePlan(sub.id, value)
-                                                        }
-                                                    >
-                                                        <SelectTrigger className="w-[140px] bg-slate-700 border-slate-600 text-white">
-                                                            <SelectValue />
-                                                        </SelectTrigger>
-                                                        <SelectContent>
-                                                            {plans.map((plan) => (
-                                                                <SelectItem key={plan.id} value={plan.id}>
-                                                                    {plan.name}
-                                                                </SelectItem>
-                                                            ))}
-                                                        </SelectContent>
-                                                    </Select>
-                                                </TableCell>
-                                            </TableRow>
-                                        ))}
-                                    </TableBody>
-                                </Table>
-                            </div>
+                                    ))}
+                                </TableBody>
+                            </Table>
                         )}
                     </CardContent>
                 </Card>
@@ -384,11 +416,11 @@ function Feature({ enabled, label }: { enabled: boolean; label: string }) {
     return (
         <div className="flex items-center gap-2 text-sm">
             {enabled ? (
-                <Check className="h-4 w-4 text-emerald-400" />
+                <Check className="h-4 w-4 text-emerald-500" />
             ) : (
-                <X className="h-4 w-4 text-slate-500" />
+                <X className="h-4 w-4 text-gray-300" />
             )}
-            <span className={enabled ? "text-white" : "text-slate-500"}>{label}</span>
+            <span className={enabled ? "text-gray-900" : "text-gray-400"}>{label}</span>
         </div>
     );
 }

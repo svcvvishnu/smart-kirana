@@ -4,11 +4,14 @@ import { cn } from "@/lib/utils";
 interface PageHeaderProps {
     title: string;
     description?: string;
-    children?: ReactNode; // For action buttons
+    children?: ReactNode; // For action buttons (legacy)
+    actions?: ReactNode; // For action buttons (preferred)
     className?: string;
 }
 
-export function PageHeader({ title, description, children, className }: PageHeaderProps) {
+export function PageHeader({ title, description, children, actions, className }: PageHeaderProps) {
+    const actionContent = actions || children;
+    
     return (
         <div className={cn("mb-6", className)}>
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -22,9 +25,9 @@ export function PageHeader({ title, description, children, className }: PageHead
                         </p>
                     )}
                 </div>
-                {children && (
+                {actionContent && (
                     <div className="flex items-center gap-3">
-                        {children}
+                        {actionContent}
                     </div>
                 )}
             </div>

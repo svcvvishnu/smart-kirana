@@ -64,7 +64,7 @@ export default async function SupportDashboardPage() {
                         <CardTitle className="text-base">Recent Sellers</CardTitle>
                         <Link
                             href="/support/sellers"
-                            className="text-sm text-indigo-600 hover:text-indigo-700 font-medium"
+                            className="text-sm text-cyan-600 hover:text-cyan-700 font-medium"
                         >
                             View All →
                         </Link>

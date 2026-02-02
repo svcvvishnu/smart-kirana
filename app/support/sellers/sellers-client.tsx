@@ -21,6 +21,7 @@ import {
     TableRow,
 } from "@/components/ui/table";
 import { Store, Search, Eye } from "lucide-react";
+import { PageHeader } from "@/components/layout";
 
 interface Seller {
     id: string;
@@ -70,27 +71,27 @@ export function SupportSellersClient({ sellers }: SupportSellersClientProps) {
     });
 
     return (
-        <div className="p-8">
-            <div className="mb-8">
-                <h1 className="text-3xl font-bold text-white">Sellers</h1>
-                <p className="text-slate-400 mt-1">View seller information (read-only)</p>
-            </div>
+        <div className="p-6">
+            <PageHeader
+                title="Sellers"
+                description="View seller information (read-only access)"
+            />
 
             {/* Filters */}
-            <Card className="mb-6 bg-slate-800 border-slate-700">
-                <CardContent className="p-6">
+            <Card className="mb-6">
+                <CardContent className="p-4">
                     <div className="flex gap-4">
                         <div className="flex-1 relative">
-                            <Search className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                            <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                             <Input
                                 placeholder="Search by shop name, owner, email, or phone..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                className="pl-9 bg-slate-700 border-slate-600 text-white"
+                                className="pl-9"
                             />
                         </div>
                         <Select value={statusFilter} onValueChange={setStatusFilter}>
-                            <SelectTrigger className="w-[150px] bg-slate-700 border-slate-600 text-white">
+                            <SelectTrigger className="w-[150px]">
                                 <SelectValue placeholder="Status" />
                             </SelectTrigger>
                             <SelectContent>
@@ -104,86 +105,85 @@ export function SupportSellersClient({ sellers }: SupportSellersClientProps) {
             </Card>
 
             {/* Sellers Table */}
-            <Card className="bg-slate-800 border-slate-700">
-                <CardHeader>
-                    <CardTitle className="text-white">
-                        Sellers ({filteredSellers.length})
+            <Card>
+                <CardHeader className="border-b">
+                    <CardTitle className="text-lg font-semibold text-gray-900">
+                        All Sellers ({filteredSellers.length})
                     </CardTitle>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="p-0">
                     {filteredSellers.length === 0 ? (
                         <div className="text-center py-12">
-                            <Store className="h-12 w-12 text-slate-600 mx-auto mb-4" />
-                            <p className="text-slate-400">No sellers found</p>
+                            <Store className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                            <p className="text-gray-500">No sellers found</p>
+                            <p className="text-sm text-gray-400 mt-1">Try adjusting your search or filters</p>
                         </div>
                     ) : (
-                        <div className="rounded-md border border-slate-700">
-                            <Table>
-                                <TableHeader>
-                                    <TableRow className="border-slate-700">
-                                        <TableHead className="text-slate-300">Shop Name</TableHead>
-                                        <TableHead className="text-slate-300">Owner</TableHead>
-                                        <TableHead className="text-slate-300">Contact</TableHead>
-                                        <TableHead className="text-slate-300">Plan</TableHead>
-                                        <TableHead className="text-slate-300">Status</TableHead>
-                                        <TableHead className="text-slate-300">Stats</TableHead>
-                                        <TableHead className="text-slate-300 text-right">View</TableHead>
+                        <Table>
+                            <TableHeader>
+                                <TableRow className="bg-gray-50">
+                                    <TableHead className="font-semibold text-gray-700">Shop Name</TableHead>
+                                    <TableHead className="font-semibold text-gray-700">Owner</TableHead>
+                                    <TableHead className="font-semibold text-gray-700">Contact</TableHead>
+                                    <TableHead className="font-semibold text-gray-700">Plan</TableHead>
+                                    <TableHead className="font-semibold text-gray-700">Status</TableHead>
+                                    <TableHead className="font-semibold text-gray-700">Stats</TableHead>
+                                    <TableHead className="font-semibold text-gray-700 text-right">View</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {filteredSellers.map((seller) => (
+                                    <TableRow key={seller.id} className="hover:bg-gray-50">
+                                        <TableCell className="font-medium text-gray-900">
+                                            <div>
+                                                <p>{seller.shopName}</p>
+                                                <p className="text-xs text-gray-500">
+                                                    {seller.businessType.replace("_", " ")}
+                                                </p>
+                                            </div>
+                                        </TableCell>
+                                        <TableCell className="text-gray-600">
+                                            {seller.ownerName}
+                                        </TableCell>
+                                        <TableCell>
+                                            <div>
+                                                <p className="text-sm text-gray-900">{seller.email}</p>
+                                                <p className="text-xs text-gray-500">{seller.phone}</p>
+                                            </div>
+                                        </TableCell>
+                                        <TableCell>
+                                            <span className="px-2.5 py-1 rounded-full text-xs font-medium bg-cyan-100 text-cyan-700">
+                                                {seller.subscription?.plan.tier || "FREE"}
+                                            </span>
+                                        </TableCell>
+                                        <TableCell>
+                                            <span
+                                                className={`px-2.5 py-1 rounded-full text-xs font-medium ${
+                                                    seller.isActive
+                                                        ? "bg-emerald-100 text-emerald-700"
+                                                        : "bg-red-100 text-red-700"
+                                                }`}
+                                            >
+                                                {seller.isActive ? "Active" : "Inactive"}
+                                            </span>
+                                        </TableCell>
+                                        <TableCell className="text-gray-600">
+                                            <div className="text-xs">
+                                                <p>{seller._count.products} products</p>
+                                                <p>{seller._count.sales} sales</p>
+                                            </div>
+                                        </TableCell>
+                                        <TableCell className="text-right">
+                                            <Link href={`/support/sellers/${seller.id}`}>
+                                                <Button variant="ghost" size="sm" className="text-gray-600 hover:text-cyan-600">
+                                                    <Eye className="h-4 w-4" />
+                                                </Button>
+                                            </Link>
+                                        </TableCell>
                                     </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {filteredSellers.map((seller) => (
-                                        <TableRow key={seller.id} className="border-slate-700">
-                                            <TableCell className="text-white font-medium">
-                                                <div>
-                                                    <p>{seller.shopName}</p>
-                                                    <p className="text-xs text-slate-500">
-                                                        {seller.businessType.replace("_", " ")}
-                                                    </p>
-                                                </div>
-                                            </TableCell>
-                                            <TableCell className="text-slate-300">
-                                                {seller.ownerName}
-                                            </TableCell>
-                                            <TableCell className="text-slate-300">
-                                                <div>
-                                                    <p className="text-sm">{seller.email}</p>
-                                                    <p className="text-xs text-slate-500">{seller.phone}</p>
-                                                </div>
-                                            </TableCell>
-                                            <TableCell>
-                                                <span className="px-2 py-1 rounded text-xs bg-slate-700 text-slate-300">
-                                                    {seller.subscription?.plan.tier || "FREE"}
-                                                </span>
-                                            </TableCell>
-                                            <TableCell>
-                                                <span
-                                                    className={`px-2 py-1 rounded text-xs ${
-                                                        seller.isActive
-                                                            ? "bg-emerald-500/20 text-emerald-400"
-                                                            : "bg-red-500/20 text-red-400"
-                                                    }`}
-                                                >
-                                                    {seller.isActive ? "Active" : "Inactive"}
-                                                </span>
-                                            </TableCell>
-                                            <TableCell className="text-slate-300">
-                                                <div className="text-xs">
-                                                    <p>{seller._count.products} products</p>
-                                                    <p>{seller._count.sales} sales</p>
-                                                </div>
-                                            </TableCell>
-                                            <TableCell className="text-right">
-                                                <Link href={`/support/sellers/${seller.id}`}>
-                                                    <Button variant="ghost" size="sm" className="text-cyan-400">
-                                                        <Eye className="h-4 w-4" />
-                                                    </Button>
-                                                </Link>
-                                            </TableCell>
-                                        </TableRow>
-                                    ))}
-                                </TableBody>
-                            </Table>
-                        </div>
+                                ))}
+                            </TableBody>
+                        </Table>
                     )}
                 </CardContent>
             </Card>
