@@ -3,7 +3,18 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/db";
 import { Resend } from "resend";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Lazy-loaded Resend client to avoid build-time errors
+let resend: Resend | null = null;
+
+function getResendClient(): Resend | null {
+    if (!process.env.RESEND_API_KEY) {
+        return null;
+    }
+    if (!resend) {
+        resend = new Resend(process.env.RESEND_API_KEY);
+    }
+    return resend;
+}
 
 // POST /api/sales/[id]/share - Share invoice via email
 export async function POST(
@@ -71,7 +82,8 @@ export async function POST(
             }
 
             // Check if Resend API key is configured
-            if (!process.env.RESEND_API_KEY) {
+            const resendClient = getResendClient();
+            if (!resendClient) {
                 return NextResponse.json(
                     { error: "Email service not configured" },
                     { status: 500 }
@@ -167,7 +179,7 @@ export async function POST(
             `;
 
             try {
-                await resend.emails.send({
+                await resendClient.emails.send({
                     from: process.env.RESEND_FROM_EMAIL || "noreply@smartkirana.com",
                     to: email,
                     subject: `Invoice ${sale.saleNumber} from ${sale.seller.shopName}`,
