@@ -101,7 +101,10 @@ export default async function DashboardPage() {
                         </CardHeader>
                         <CardContent className="space-y-3">
                             {user.role === "OPERATIONS" || user.role === "OWNER" ? (
-                                <ActionButton href="/billing" label="Create New Bill" />
+                                <>
+                                    <ActionButton href="/billing" label="Create New Bill" />
+                                    <ActionButton href="/sales" label="View Sales History" />
+                                </>
                             ) : null}
                             {user.role === "OWNER" ? (
                                 <>
@@ -115,12 +118,22 @@ export default async function DashboardPage() {
 
                     <Card>
                         <CardHeader>
-                            <CardTitle>Recent Activity</CardTitle>
+                            <CardTitle>Business Tools</CardTitle>
                         </CardHeader>
-                        <CardContent>
-                            <p className="text-sm text-muted-foreground">
-                                No recent activity to display.
-                            </p>
+                        <CardContent className="space-y-3">
+                            {user.role === "OWNER" && (
+                                <>
+                                    <ActionButton href="/analytics" label="View Analytics" />
+                                    <ActionButton href="/reports" label="Generate Reports" />
+                                    <ActionButton href="/expenses" label="Track Expenses" />
+                                    <ActionButton href="/notifications" label="Notifications" />
+                                </>
+                            )}
+                            {user.role === "OPERATIONS" && (
+                                <p className="text-sm text-muted-foreground">
+                                    Contact shop owner for access to analytics and reports.
+                                </p>
+                            )}
                         </CardContent>
                     </Card>
                 </div>

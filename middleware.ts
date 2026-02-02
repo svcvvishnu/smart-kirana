@@ -31,22 +31,34 @@ export default auth((req) => {
     // Role-based access control
     const path = nextUrl.pathname
 
-    // Operations role restrictions
+    // Operations role restrictions - billing staff only
     if (userRole === "OPERATIONS") {
-        const allowedPaths = ["/dashboard", "/billing"]
+        const allowedPaths = ["/dashboard", "/billing", "/sales"]
         if (!allowedPaths.some((p) => path.startsWith(p))) {
             return NextResponse.redirect(new URL("/dashboard", nextUrl))
         }
     }
 
-    // Owner role can access most paths except admin
+    // Owner role can access most paths except admin and support panels
     if (userRole === "OWNER") {
-        if (path.startsWith("/admin")) {
+        const allowedPaths = [
+            "/dashboard",
+            "/billing",
+            "/sales",
+            "/products",
+            "/inventory",
+            "/customers",
+            "/analytics",
+            "/reports",
+            "/expenses",
+            "/notifications",
+        ]
+        if (path.startsWith("/admin") || path.startsWith("/support")) {
             return NextResponse.redirect(new URL("/dashboard", nextUrl))
         }
     }
 
-    // Support role restrictions
+    // Support role restrictions - read-only access to seller info
     if (userRole === "SUPPORT") {
         const allowedPaths = ["/support"]
         if (!allowedPaths.some((p) => path.startsWith(p))) {
@@ -54,7 +66,7 @@ export default auth((req) => {
         }
     }
 
-    // Admin can access everything
+    // Admin can access everything (admin panel and all other routes)
 
     return NextResponse.next()
 })
