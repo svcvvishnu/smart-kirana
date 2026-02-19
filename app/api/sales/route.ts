@@ -115,7 +115,16 @@ export async function POST(request: Request) {
             );
         }
 
-        const { items, customerId, discountType, discountValue } = body;
+        const { items, customerId, discountType, discountValue, paymentMethod } = body;
+
+        // Validate payment method
+        const validPaymentMethods = ["CASH", "UPI", "CARD", "BANK_TRANSFER", "CREDIT"];
+        if (paymentMethod && !validPaymentMethods.includes(paymentMethod)) {
+            return NextResponse.json(
+                { error: `Invalid payment method. Must be one of: ${validPaymentMethods.join(", ")}` },
+                { status: 400 }
+            );
+        }
 
         // Validate items
         if (!items || !Array.isArray(items) || items.length === 0) {
@@ -324,6 +333,7 @@ export async function POST(request: Request) {
                     discountAmount,
                     total,
                     profit: totalProfit,
+                    paymentMethod: paymentMethod || "CASH",
                     createdBy: session.user.id!,
                     items: {
                         create: saleItems,

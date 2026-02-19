@@ -11,7 +11,6 @@ export default async function ProductsPage() {
         redirect("/login");
     }
 
-    // Check if user is OWNER
     if (session.user.role !== "OWNER") {
         redirect("/dashboard");
     }
@@ -20,8 +19,7 @@ export default async function ProductsPage() {
         redirect("/dashboard");
     }
 
-    // Fetch products and categories
-    const [products, categories] = await Promise.all([
+    const [products, categories, units, seller] = await Promise.all([
         prisma.product.findMany({
             where: {
                 sellerId: session.user.sellerId,
@@ -29,29 +27,41 @@ export default async function ProductsPage() {
             },
             include: {
                 category: {
-                    select: {
-                        id: true,
-                        name: true,
-                    },
+                    select: { id: true, name: true },
+                },
+                unit: {
+                    select: { id: true, name: true, abbreviation: true },
                 },
             },
-            orderBy: {
-                createdAt: "desc",
-            },
+            orderBy: { createdAt: "desc" },
         }),
         prisma.category.findMany({
+            where: { sellerId: session.user.sellerId },
+            orderBy: { name: "asc" },
+        }),
+        prisma.unit.findMany({
             where: {
-                sellerId: session.user.sellerId,
+                OR: [
+                    { sellerId: null },
+                    { sellerId: session.user.sellerId },
+                ],
             },
-            orderBy: {
-                name: "asc",
-            },
+            orderBy: { name: "asc" },
+        }),
+        prisma.seller.findUnique({
+            where: { id: session.user.sellerId },
+            select: { defaultPricingMode: true, defaultMarkupPercentage: true },
         }),
     ]);
 
     return (
         <AppShell user={{ name: session.user.name || "User", role: session.user.role as "OWNER" }}>
-            <ProductsClient initialProducts={products} initialCategories={categories} />
+            <ProductsClient
+                initialProducts={products}
+                initialCategories={categories}
+                initialUnits={units}
+                sellerDefaults={seller || { defaultPricingMode: "FIXED", defaultMarkupPercentage: 0 }}
+            />
         </AppShell>
     );
 }

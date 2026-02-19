@@ -27,35 +27,54 @@ interface Category {
     name: string;
 }
 
+interface Unit {
+    id: string;
+    name: string;
+    abbreviation: string;
+    sellerId?: string | null;
+}
+
 interface Product {
     id: string;
     name: string;
     categoryId: string;
-    category: {
-        id: string;
-        name: string;
-    };
+    category: { id: string; name: string };
     purchasePrice: number;
     sellingPrice: number;
+    pricingMode?: string;
+    markupPercentage?: number | null;
+    unitId?: string | null;
+    unit?: { id: string; name: string; abbreviation: string } | null;
     currentStock: number;
     minStockLevel: number;
     description?: string | null;
 }
 
+interface SellerDefaults {
+    defaultPricingMode: string;
+    defaultMarkupPercentage: number;
+}
+
 interface ProductListProps {
     products: Product[];
     categories: Category[];
-    onUpdate: (id: string, data: Partial<Product>) => Promise<void>;
+    units?: Unit[];
+    sellerDefaults?: SellerDefaults;
+    onUpdate: (id: string, data: any) => Promise<void>;
     onDelete: (id: string) => Promise<void>;
     onCategoryCreate: (name: string) => Promise<void>;
+    onUnitCreate?: (name: string, abbreviation: string) => Promise<void>;
 }
 
 export function ProductList({
     products,
     categories,
+    units = [],
+    sellerDefaults,
     onUpdate,
     onDelete,
     onCategoryCreate,
+    onUnitCreate,
 }: ProductListProps) {
     const [deleteId, setDeleteId] = useState<string | null>(null);
     const [deleting, setDeleting] = useState(false);
@@ -98,6 +117,7 @@ export function ProductList({
                         <TableRow>
                             <TableHead>Product</TableHead>
                             <TableHead>Category</TableHead>
+                            <TableHead>Unit</TableHead>
                             <TableHead>Stock</TableHead>
                             <TableHead>Purchase</TableHead>
                             <TableHead>Selling</TableHead>
@@ -112,6 +132,9 @@ export function ProductList({
                                     {product.name}
                                 </TableCell>
                                 <TableCell>{product.category.name}</TableCell>
+                                <TableCell className="text-muted-foreground">
+                                    {product.unit?.abbreviation || "—"}
+                                </TableCell>
                                 <TableCell>
                                     <div className="flex items-center gap-2">
                                         <span>{product.currentStock}</span>
@@ -135,8 +158,11 @@ export function ProductList({
                                         <ProductForm
                                             product={product}
                                             categories={categories}
+                                            units={units}
+                                            sellerDefaults={sellerDefaults}
                                             onSubmit={(data) => onUpdate(product.id, data)}
                                             onCategoryCreate={onCategoryCreate}
+                                            onUnitCreate={onUnitCreate}
                                             trigger={
                                                 <Button variant="ghost" size="sm">
                                                     <Edit className="h-4 w-4" />
@@ -158,7 +184,6 @@ export function ProductList({
                 </Table>
             </div>
 
-            {/* Delete Confirmation Dialog */}
             <Dialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
                 <DialogContent>
                     <DialogHeader>

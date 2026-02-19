@@ -23,8 +23,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
                 const user = await prisma.user.findUnique({
                     where: { email: credentials.email as string },
-                    include: { seller: true },
-                })
+                }) as any
 
                 if (!user) {
                     return null
@@ -45,6 +44,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                     name: user.name,
                     role: user.role,
                     sellerId: user.sellerId,
+                    mustChangePassword: user.mustChangePassword ?? false,
                 }
             },
         }),
@@ -55,6 +55,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                 token.id = user.id
                 token.role = user.role as UserRole
                 token.sellerId = user.sellerId as string | null
+                token.mustChangePassword = (user.mustChangePassword as boolean) ?? false
             }
             return token
         },
@@ -63,6 +64,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                 session.user.id = token.id as string
                 session.user.role = token.role as UserRole
                 session.user.sellerId = token.sellerId as string | null
+                session.user.mustChangePassword = Boolean(token.mustChangePassword)
             }
             return session
         },

@@ -21,37 +21,55 @@ interface Category {
     name: string;
 }
 
+interface Unit {
+    id: string;
+    name: string;
+    abbreviation: string;
+    sellerId?: string | null;
+}
+
 interface Product {
     id: string;
     name: string;
     categoryId: string;
-    category: {
-        id: string;
-        name: string;
-    };
+    category: { id: string; name: string };
     purchasePrice: number;
     sellingPrice: number;
+    pricingMode?: string;
+    markupPercentage?: number | null;
+    unitId?: string | null;
+    unit?: { id: string; name: string; abbreviation: string } | null;
     currentStock: number;
     minStockLevel: number;
     description?: string | null;
 }
 
+interface SellerDefaults {
+    defaultPricingMode: string;
+    defaultMarkupPercentage: number;
+}
+
 interface ProductsClientProps {
     initialProducts: Product[];
     initialCategories: Category[];
+    initialUnits: Unit[];
+    sellerDefaults: SellerDefaults;
 }
 
 export function ProductsClient({
     initialProducts,
     initialCategories,
+    initialUnits,
+    sellerDefaults,
 }: ProductsClientProps) {
     const router = useRouter();
-    const [products, setProducts] = useState(initialProducts);
+    const [products] = useState(initialProducts);
     const [categories, setCategories] = useState(initialCategories);
+    const [units, setUnits] = useState(initialUnits);
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
-    const handleCreateProduct = async (data: Partial<Product>) => {
+    const handleCreateProduct = async (data: any) => {
         const res = await fetch("/api/products", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -66,7 +84,7 @@ export function ProductsClient({
         router.refresh();
     };
 
-    const handleUpdateProduct = async (id: string, data: Partial<Product>) => {
+    const handleUpdateProduct = async (id: string, data: any) => {
         const res = await fetch(`/api/products/${id}`, {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
@@ -111,7 +129,23 @@ export function ProductsClient({
         router.refresh();
     };
 
-    // Filter products
+    const handleCreateUnit = async (name: string, abbreviation: string) => {
+        const res = await fetch("/api/units", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ name, abbreviation }),
+        });
+
+        if (!res.ok) {
+            const error = await res.json();
+            throw new Error(error.error || "Failed to create unit");
+        }
+
+        const newUnit = await res.json();
+        setUnits([...units, newUnit]);
+        router.refresh();
+    };
+
     const filteredProducts = products.filter((product) => {
         const matchesSearch = product.name
             .toLowerCase()
@@ -124,7 +158,6 @@ export function ProductsClient({
 
     return (
         <div className="p-6">
-            {/* Page Header */}
             <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
                     <h1 className="text-2xl font-semibold tracking-tight text-gray-900 flex items-center gap-2">
@@ -137,8 +170,11 @@ export function ProductsClient({
                 </div>
                 <ProductForm
                     categories={categories}
+                    units={units}
+                    sellerDefaults={sellerDefaults}
                     onSubmit={handleCreateProduct}
                     onCategoryCreate={handleCreateCategory}
+                    onUnitCreate={handleCreateUnit}
                     trigger={
                         <Button className="bg-indigo-600 hover:bg-indigo-700">
                             <Plus className="h-4 w-4 mr-2" />
@@ -148,7 +184,6 @@ export function ProductsClient({
                 />
             </div>
 
-            {/* Filters */}
             <Card className="mb-6">
                 <CardContent className="p-4">
                     <div className="flex flex-col sm:flex-row gap-4">
@@ -183,13 +218,15 @@ export function ProductsClient({
                 </CardContent>
             </Card>
 
-            {/* Products List */}
             <ProductList
                 products={filteredProducts}
                 categories={categories}
+                units={units}
+                sellerDefaults={sellerDefaults}
                 onUpdate={handleUpdateProduct}
                 onDelete={handleDeleteProduct}
                 onCategoryCreate={handleCreateCategory}
+                onUnitCreate={handleCreateUnit}
             />
         </div>
     );

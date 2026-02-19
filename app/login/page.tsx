@@ -96,12 +96,6 @@ export default function LoginPage() {
                             {loading ? "Signing in..." : "Sign In"}
                         </Button>
                     </form>
-                    <div className="mt-8 pt-6 border-t">
-                        <p className="text-xs text-center text-muted-foreground">
-                            Demo Credentials:<br />
-                            <span className="font-mono">owner@test.com</span> | <span className="font-mono">password123</span>
-                        </p>
-                    </div>
                 </CardContent>
             </Card>
         </div>

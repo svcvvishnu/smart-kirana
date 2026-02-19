@@ -68,6 +68,29 @@ async function main() {
     });
     console.log("✅ Created subscription plans");
 
+    // Create default system units (sellerId = null means system-wide)
+    const defaultUnits = [
+        { name: "Piece", abbreviation: "pc" },
+        { name: "Kg", abbreviation: "kg" },
+        { name: "Gram", abbreviation: "g" },
+        { name: "Liter", abbreviation: "L" },
+        { name: "Milliliter", abbreviation: "ml" },
+        { name: "Box", abbreviation: "box" },
+        { name: "Pack", abbreviation: "pack" },
+        { name: "Dozen", abbreviation: "dz" },
+    ];
+    for (const unit of defaultUnits) {
+        const existing = await prisma.unit.findFirst({
+            where: { name: unit.name, sellerId: null },
+        });
+        if (!existing) {
+            await prisma.unit.create({
+                data: { name: unit.name, abbreviation: unit.abbreviation, sellerId: null },
+            });
+        }
+    }
+    console.log("✅ Created default system units");
+
     // Create a demo seller
     const seller = await prisma.seller.create({
         data: {

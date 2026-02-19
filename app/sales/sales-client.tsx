@@ -30,6 +30,7 @@ interface Sale {
     discountAmount: number;
     total: number;
     profit: number;
+    paymentMethod?: string;
     createdAt: Date;
     customer: {
         id: string;
@@ -40,6 +41,14 @@ interface Sale {
         items: number;
     };
 }
+
+const PAYMENT_METHOD_LABELS: Record<string, string> = {
+    CASH: "Cash",
+    UPI: "UPI",
+    CARD: "Card",
+    BANK_TRANSFER: "Bank Transfer",
+    CREDIT: "Credit",
+};
 
 interface Customer {
     id: string;
@@ -273,6 +282,7 @@ export function SalesClient({
                                         <TableHead className="text-right font-medium">Subtotal</TableHead>
                                         <TableHead className="text-right font-medium">Discount</TableHead>
                                         <TableHead className="text-right font-medium">Total</TableHead>
+                                        <TableHead className="font-medium">Payment</TableHead>
                                         {userRole === "OWNER" && (
                                             <TableHead className="text-right font-medium">Profit</TableHead>
                                         )}
@@ -304,6 +314,9 @@ export function SalesClient({
                                                 {sale.discountAmount > 0 ? `-${formatCurrency(sale.discountAmount)}` : "-"}
                                             </TableCell>
                                             <TableCell className="text-right font-semibold">{formatCurrency(sale.total)}</TableCell>
+                                            <TableCell className="text-sm">
+                                                {PAYMENT_METHOD_LABELS[sale.paymentMethod || "CASH"] || sale.paymentMethod}
+                                            </TableCell>
                                             {userRole === "OWNER" && (
                                                 <TableCell className="text-right text-emerald-600 font-medium">
                                                     {formatCurrency(sale.profit)}

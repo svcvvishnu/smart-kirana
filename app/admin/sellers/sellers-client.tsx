@@ -94,7 +94,6 @@ export function SellersClient({ initialSellers, subscriptionPlans }: SellersClie
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [loading, setLoading] = useState(false);
 
-    // Form state
     const [formData, setFormData] = useState({
         shopName: "",
         businessType: "GENERAL_STORE",
@@ -103,7 +102,6 @@ export function SellersClient({ initialSellers, subscriptionPlans }: SellersClie
         email: "",
         address: "",
         ownerEmail: "",
-        ownerPassword: "",
         subscriptionPlanId: "",
     });
 
@@ -116,7 +114,6 @@ export function SellersClient({ initialSellers, subscriptionPlans }: SellersClie
             email: "",
             address: "",
             ownerEmail: "",
-            ownerPassword: "",
             subscriptionPlanId: "",
         });
     };
@@ -287,32 +284,23 @@ export function SellersClient({ initialSellers, subscriptionPlans }: SellersClie
                                     </div>
                                     <hr className="my-2" />
                                     <p className="text-sm font-medium text-gray-700">Owner Login Credentials</p>
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div className="space-y-2">
-                                            <Label>Owner Login Email *</Label>
-                                            <Input
-                                                type="email"
-                                                value={formData.ownerEmail}
-                                                onChange={(e) =>
-                                                    setFormData({ ...formData, ownerEmail: e.target.value })
-                                                }
-                                                placeholder="owner@example.com"
-                                                required
-                                            />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <Label>Password *</Label>
-                                            <Input
-                                                type="password"
-                                                value={formData.ownerPassword}
-                                                onChange={(e) =>
-                                                    setFormData({ ...formData, ownerPassword: e.target.value })
-                                                }
-                                                placeholder="Min 8 characters"
-                                                required
-                                                minLength={8}
-                                            />
-                                        </div>
+                                    <div className="space-y-2">
+                                        <Label>Owner Login Email *</Label>
+                                        <Input
+                                            type="email"
+                                            value={formData.ownerEmail}
+                                            onChange={(e) =>
+                                                setFormData({ ...formData, ownerEmail: e.target.value })
+                                            }
+                                            placeholder="owner@example.com"
+                                            required
+                                        />
+                                    </div>
+                                    <div className="bg-blue-50 border border-blue-200 rounded-md p-3">
+                                        <p className="text-sm text-blue-700">
+                                            A temporary password will be generated and emailed to the owner.
+                                            They will be required to change it on first login.
+                                        </p>
                                     </div>
                                     <div className="space-y-2">
                                         <Label>Subscription Plan</Label>

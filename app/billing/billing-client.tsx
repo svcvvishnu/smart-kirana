@@ -59,6 +59,7 @@ export function BillingClient({
     const [selectedCustomer, setSelectedCustomer] = useState<string | null>(null);
     const [discountType, setDiscountType] = useState<"PERCENTAGE" | "FLAT" | null>(null);
     const [discountValue, setDiscountValue] = useState(0);
+    const [paymentMethod, setPaymentMethod] = useState("CASH");
     const [createdSale, setCreatedSale] = useState<any>(null);
     const [creating, setCreating] = useState(false);
 
@@ -162,6 +163,7 @@ export function BillingClient({
                     customerId: selectedCustomer,
                     discountType,
                     discountValue,
+                    paymentMethod,
                 }),
             });
 
@@ -181,6 +183,7 @@ export function BillingClient({
             setSelectedCustomer(null);
             setDiscountType(null);
             setDiscountValue(0);
+            setPaymentMethod("CASH");
 
             router.refresh();
         } catch (error: any) {
@@ -326,6 +329,26 @@ export function BillingClient({
                                             }
                                         />
                                     </div>
+                                </div>
+
+                                {/* Payment Method */}
+                                <div className="space-y-2">
+                                    <Label className="text-sm">Payment Method</Label>
+                                    <Select
+                                        value={paymentMethod}
+                                        onValueChange={setPaymentMethod}
+                                    >
+                                        <SelectTrigger>
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="CASH">Cash</SelectItem>
+                                            <SelectItem value="UPI">UPI</SelectItem>
+                                            <SelectItem value="CARD">Card</SelectItem>
+                                            <SelectItem value="BANK_TRANSFER">Bank Transfer</SelectItem>
+                                            <SelectItem value="CREDIT">Credit</SelectItem>
+                                        </SelectContent>
+                                    </Select>
                                 </div>
 
                                 {/* Totals */}

@@ -26,6 +26,13 @@ export async function GET(request: Request) {
                         name: true,
                     },
                 },
+                unit: {
+                    select: {
+                        id: true,
+                        name: true,
+                        abbreviation: true,
+                    },
+                },
             },
             orderBy: {
                 createdAt: "desc",
@@ -61,22 +68,52 @@ export async function POST(request: Request) {
             categoryId,
             purchasePrice,
             sellingPrice,
+            pricingMode,
+            markupPercentage,
+            unitId,
             currentStock,
             minStockLevel,
             description,
         } = body;
 
         // Validation
-        if (!name || !categoryId || purchasePrice === undefined || sellingPrice === undefined) {
+        if (!name || !categoryId || purchasePrice === undefined) {
             return NextResponse.json(
                 { error: "Missing required fields" },
                 { status: 400 }
             );
         }
 
-        if (purchasePrice < 0 || sellingPrice < 0) {
+        if (purchasePrice < 0) {
             return NextResponse.json(
-                { error: "Prices cannot be negative" },
+                { error: "Purchase price cannot be negative" },
+                { status: 400 }
+            );
+        }
+
+        // Determine final selling price based on pricing mode
+        let finalSellingPrice = parseFloat(sellingPrice || 0);
+        let finalPricingMode = pricingMode || "FIXED";
+        let finalMarkup = markupPercentage != null ? parseFloat(markupPercentage) : null;
+
+        if (finalPricingMode === "MARKUP" && finalMarkup != null) {
+            finalSellingPrice = parseFloat(purchasePrice) * (1 + finalMarkup / 100);
+        } else if (!sellingPrice && sellingPrice !== 0) {
+            // Auto-apply seller defaults if no selling price provided
+            const seller = await prisma.seller.findUnique({
+                where: { id: session.user.sellerId },
+                select: { defaultPricingMode: true, defaultMarkupPercentage: true },
+            });
+            if (seller?.defaultPricingMode === "MARKUP" && seller.defaultMarkupPercentage > 0) {
+                finalPricingMode = "MARKUP";
+                finalMarkup = seller.defaultMarkupPercentage;
+                finalSellingPrice = parseFloat(purchasePrice) * (1 + finalMarkup / 100);
+            }
+        }
+
+        if (finalSellingPrice < 0) {
+            return NextResponse.json(
+                { error: "Selling price cannot be negative" },
                 { status: 400 }
             );
         }
@@ -110,13 +147,17 @@ export async function POST(request: Request) {
                 categoryId,
                 sellerId: session.user.sellerId,
                 purchasePrice: parseFloat(purchasePrice),
-                sellingPrice: parseFloat(sellingPrice),
+                sellingPrice: finalSellingPrice,
+                pricingMode: finalPricingMode,
+                markupPercentage: finalMarkup,
+                unitId: unitId || null,
                 currentStock: parseInt(currentStock) || 0,
                 minStockLevel: parseInt(minStockLevel) || 10,
                 description: description || null,
             },
             include: {
                 category: true,
+                unit: true,
             },
         });
 

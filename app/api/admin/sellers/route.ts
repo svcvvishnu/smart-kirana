@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/db";
 import bcrypt from "bcryptjs";
+import crypto from "crypto";
+import { sendWelcomeEmail } from "@/lib/email";
 
 // GET /api/admin/sellers - Fetch all sellers
 export async function GET(request: Request) {
@@ -102,7 +104,6 @@ export async function POST(request: Request) {
             email,
             address,
             ownerEmail,
-            ownerPassword,
             subscriptionPlanId,
         } = body;
 
@@ -114,9 +115,9 @@ export async function POST(request: Request) {
             );
         }
 
-        if (!ownerEmail || !ownerPassword) {
+        if (!ownerEmail) {
             return NextResponse.json(
-                { error: "Owner email and password are required" },
+                { error: "Owner email is required" },
                 { status: 400 }
             );
         }
@@ -145,12 +146,12 @@ export async function POST(request: Request) {
             );
         }
 
-        // Hash password
-        const hashedPassword = await bcrypt.hash(ownerPassword, 10);
+        // Generate a secure temporary password
+        const temporaryPassword = crypto.randomBytes(4).toString("hex") + "A1!";
+        const hashedPassword = await bcrypt.hash(temporaryPassword, 10);
 
         // Create seller, owner user, and subscription in a transaction
         const result = await prisma.$transaction(async (tx) => {
-            // Create seller
             const seller = await tx.seller.create({
                 data: {
                     shopName,
@@ -163,7 +164,6 @@ export async function POST(request: Request) {
                 },
             });
 
-            // Create owner user
             const user = await tx.user.create({
                 data: {
                     email: ownerEmail,
@@ -171,10 +171,10 @@ export async function POST(request: Request) {
                     name: ownerName,
                     role: "OWNER",
                     sellerId: seller.id,
+                    mustChangePassword: true,
                 },
             });
 
-            // Create subscription if plan provided
             if (subscriptionPlanId) {
                 await tx.subscription.create({
                     data: {
@@ -184,7 +184,6 @@ export async function POST(request: Request) {
                     },
                 });
             } else {
-                // Assign free plan by default
                 const freePlan = await tx.subscriptionPlan.findFirst({
                     where: { tier: "FREE" },
                 });
@@ -202,6 +201,15 @@ export async function POST(request: Request) {
 
             return { seller, user };
         });
+
+        // Send welcome email (non-blocking, don't fail the request if email fails)
+        sendWelcomeEmail({
+            to: ownerEmail,
+            ownerName,
+            shopName,
+            loginEmail: ownerEmail,
+            temporaryPassword,
+        }).catch((err) => console.error("Welcome email failed:", err));
 
         return NextResponse.json(result.seller, { status: 201 });
     } catch (error) {

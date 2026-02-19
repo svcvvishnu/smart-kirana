@@ -22,6 +22,7 @@ export async function GET(
             },
             include: {
                 category: true,
+                unit: true,
             },
         });
 
@@ -69,19 +70,28 @@ export async function PATCH(
             return NextResponse.json({ error: "Product not found" }, { status: 404 });
         }
 
-        // Update product
+        // Calculate selling price if markup mode
+        let finalSellingPrice = body.sellingPrice !== undefined ? parseFloat(body.sellingPrice) : undefined;
+        if (body.pricingMode === "MARKUP" && body.markupPercentage != null && body.purchasePrice !== undefined) {
+            finalSellingPrice = parseFloat(body.purchasePrice) * (1 + parseFloat(body.markupPercentage) / 100);
+        }
+
         const product = await prisma.product.update({
             where: { id },
             data: {
                 name: body.name,
                 categoryId: body.categoryId,
                 purchasePrice: body.purchasePrice !== undefined ? parseFloat(body.purchasePrice) : undefined,
-                sellingPrice: body.sellingPrice !== undefined ? parseFloat(body.sellingPrice) : undefined,
+                sellingPrice: finalSellingPrice,
+                pricingMode: body.pricingMode,
+                markupPercentage: body.markupPercentage !== undefined ? (body.markupPercentage != null ? parseFloat(body.markupPercentage) : null) : undefined,
+                unitId: body.unitId !== undefined ? (body.unitId || null) : undefined,
                 minStockLevel: body.minStockLevel !== undefined ? parseInt(body.minStockLevel) : undefined,
                 description: body.description,
             },
             include: {
                 category: true,
+                unit: true,
             },
         });
 

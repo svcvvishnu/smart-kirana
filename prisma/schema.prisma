@@ -37,15 +37,16 @@ enum SubscriptionTier {
 
 // User Model - All system users
 model User {
-  id            String    @id @default(cuid())
-  email         String    @unique
-  password      String    // Hashed password
-  name          String
-  role          UserRole
-  sellerId      String?   // null for ADMIN and SUPPORT
-  seller        Seller?   @relation(fields: [sellerId], references: [id], onDelete: Cascade)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  id                  String    @id @default(cuid())
+  email               String    @unique
+  password            String    // Hashed password
+  name                String
+  role                UserRole
+  mustChangePassword  Boolean   @default(false)
+  sellerId            String?   // null for ADMIN and SUPPORT
+  seller              Seller?   @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
 
   @@index([email])
   @@index([sellerId])
@@ -53,14 +54,16 @@ model User {
 
 // Seller/Shop Model
 model Seller {
-  id                String         @id @default(cuid())
-  shopName          String
-  businessType      BusinessType
-  ownerName         String
-  phone             String
-  email             String         @unique
-  address           String?
-  isActive          Boolean        @default(true)
+  id                       String         @id @default(cuid())
+  shopName                 String
+  businessType             BusinessType
+  ownerName                String
+  phone                    String
+  email                    String         @unique
+  address                  String?
+  isActive                 Boolean        @default(true)
+  defaultPricingMode       String         @default("FIXED") // "FIXED" or "MARKUP"
+  defaultMarkupPercentage  Float          @default(0)
   
   // Relations
   users             User[]
@@ -71,6 +74,7 @@ model Seller {
   sales             Sale[]
   expenses          Expense[]
   notifications     Notification[]
+  units             Unit[]
   
   createdAt         DateTime       @default(now())
   updatedAt         DateTime       @updatedAt
@@ -134,18 +138,22 @@ model Category {
 
 // Product Model
 model Product {
-  id              String      @id @default(cuid())
-  name            String
-  categoryId      String
-  category        Category    @relation(fields: [categoryId], references: [id])
-  sellerId        String
-  seller          Seller      @relation(fields: [sellerId], references: [id], onDelete: Cascade)
-  purchasePrice   Float
-  sellingPrice    Float
-  currentStock    Int         @default(0)
-  minStockLevel   Int         @default(10) // Alert threshold
-  description     String?
-  isActive        Boolean     @default(true)
+  id                String      @id @default(cuid())
+  name              String
+  categoryId        String
+  category          Category    @relation(fields: [categoryId], references: [id])
+  sellerId          String
+  seller            Seller      @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  purchasePrice     Float
+  sellingPrice      Float
+  pricingMode       String      @default("FIXED") // "FIXED" or "MARKUP"
+  markupPercentage  Float?
+  unitId            String?
+  unit              Unit?       @relation(fields: [unitId], references: [id])
+  currentStock      Int         @default(0)
+  minStockLevel     Int         @default(10) // Alert threshold
+  description       String?
+  isActive          Boolean     @default(true)
   
   stockTransactions StockTransaction[]
   saleItems         SaleItem[]
@@ -156,6 +164,7 @@ model Product {
   @@index([sellerId])
   @@index([categoryId])
   @@index([isActive])
+  @@index([unitId])
 }
 
 // Stock Transaction Model - Track all stock movements
@@ -208,6 +217,7 @@ model Sale {
   discountAmount  Float       @default(0)
   total           Float
   profit          Float       // Auto-calculated
+  paymentMethod   String      @default("CASH") // "CASH", "UPI", "CARD", "BANK_TRANSFER", "CREDIT"
   
   items           SaleItem[]
   
@@ -271,4 +281,19 @@ model Notification {
   @@index([sellerId])
   @@index([isRead])
   @@index([createdAt])
+}
+
+// Unit Model - System defaults (sellerId=null) + seller custom units
+model Unit {
+  id            String    @id @default(cuid())
+  name          String
+  abbreviation  String
+  sellerId      String?
+  seller        Seller?   @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  products      Product[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@unique([sellerId, name])
+  @@index([sellerId])
 }

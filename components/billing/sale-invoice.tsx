@@ -24,6 +24,7 @@ interface SaleInvoiceProps {
         subtotal: number;
         discountAmount: number;
         total: number;
+        paymentMethod?: string;
         customer?: {
             name: string;
             phone: string;
@@ -38,6 +39,7 @@ interface SaleInvoiceProps {
         items: Array<{
             product: {
                 name: string;
+                unit?: { name: string; abbreviation: string } | null;
             };
             quantity: number;
             sellingPrice: number;
@@ -46,20 +48,32 @@ interface SaleInvoiceProps {
     };
 }
 
+const PAYMENT_METHOD_LABELS: Record<string, string> = {
+    CASH: "Cash",
+    UPI: "UPI",
+    CARD: "Card",
+    BANK_TRANSFER: "Bank Transfer",
+    CREDIT: "Credit",
+};
+
 export function SaleInvoice({ sale }: SaleInvoiceProps) {
     const [emailDialogOpen, setEmailDialogOpen] = useState(false);
     const [email, setEmail] = useState(sale.customer?.email || "");
     const [sending, setSending] = useState(false);
     const [emailSent, setEmailSent] = useState(false);
 
+    const paymentLabel = sale.paymentMethod ? PAYMENT_METHOD_LABELS[sale.paymentMethod] || sale.paymentMethod : "Cash";
+
     const handlePrint = () => {
         window.print();
     };
 
     const handleWhatsAppShare = () => {
-        // Build invoice text for WhatsApp
         const itemsList = sale.items
-            .map((item) => `• ${item.product.name} x ${item.quantity} = ${formatCurrency(item.subtotal)}`)
+            .map((item) => {
+                const unitStr = item.product.unit ? ` ${item.product.unit.abbreviation}` : "";
+                return `• ${item.product.name} x ${item.quantity}${unitStr} = ${formatCurrency(item.subtotal)}`;
+            })
             .join("\n");
 
         const message = `
@@ -73,6 +87,7 @@ ${itemsList}
 Subtotal: ${formatCurrency(sale.subtotal)}
 ${sale.discountAmount > 0 ? `Discount: -${formatCurrency(sale.discountAmount)}` : ""}
 *Total: ${formatCurrency(sale.total)}*
+Payment: ${paymentLabel}
 
 Thank you for your business!
         `.trim();
@@ -260,7 +275,9 @@ Thank you for your business!
                             {sale.items.map((item, index) => (
                                 <tr key={index} className="border-b">
                                     <td className="py-3">{item.product.name}</td>
-                                    <td className="text-center py-3">{item.quantity}</td>
+                                    <td className="text-center py-3">
+                                        {item.quantity}{item.product.unit ? ` ${item.product.unit.abbreviation}` : ""}
+                                    </td>
                                     <td className="text-right py-3">
                                         {formatCurrency(item.sellingPrice)}
                                     </td>
@@ -294,6 +311,16 @@ Thank you for your business!
                         <span>{formatCurrency(sale.total)}</span>
                     </div>
                 </div>
+
+                {/* Payment Method */}
+                {sale.paymentMethod && (
+                    <div className="border-t pt-4">
+                        <div className="flex justify-between text-sm">
+                            <span className="text-muted-foreground">Payment Method:</span>
+                            <span className="font-medium">{paymentLabel}</span>
+                        </div>
+                    </div>
+                )}
 
                 {/* Footer */}
                 <div className="border-t pt-4 text-center text-sm text-muted-foreground">

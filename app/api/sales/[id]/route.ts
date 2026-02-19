@@ -27,6 +27,12 @@ export async function GET(
                         product: {
                             select: {
                                 name: true,
+                                unit: {
+                                    select: {
+                                        name: true,
+                                        abbreviation: true,
+                                    },
+                                },
                             },
                         },
                     },

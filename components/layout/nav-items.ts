@@ -12,6 +12,8 @@ import {
     Store,
     CreditCard,
     Headphones,
+    Settings,
+    Tags,
     LucideIcon,
 } from "lucide-react";
 
@@ -45,6 +47,7 @@ export const ownerNavItems: NavSection[] = [
         title: "Inventory",
         items: [
             { href: "/products", label: "Products", icon: Package },
+            { href: "/categories", label: "Categories", icon: Tags },
             { href: "/inventory", label: "Stock Management", icon: Warehouse },
         ],
     },
@@ -61,6 +64,11 @@ export const ownerNavItems: NavSection[] = [
             { href: "/analytics", label: "Analytics", icon: BarChart3 },
             { href: "/reports", label: "Reports", icon: FileText },
             { href: "/notifications", label: "Notifications", icon: Bell },
+        ],
+    },
+    {
+        items: [
+            { href: "/settings", label: "Settings", icon: Settings },
         ],
     },
 ];

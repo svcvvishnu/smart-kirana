@@ -42,6 +42,7 @@ export async function POST(
                         product: {
                             select: {
                                 name: true,
+                                unit: { select: { abbreviation: true } },
                             },
                         },
                     },
@@ -98,12 +99,16 @@ export async function POST(
                 }).format(amount);
 
             // Build email content
+            const paymentMethodLabels: Record<string, string> = {
+                CASH: "Cash", UPI: "UPI", CARD: "Card", BANK_TRANSFER: "Bank Transfer", CREDIT: "Credit",
+            };
+
             const itemRows = sale.items
                 .map(
-                    (item) =>
+                    (item: any) =>
                         `<tr>
                             <td style="padding: 8px; border-bottom: 1px solid #eee;">${item.product.name}</td>
-                            <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: center;">${item.quantity}</td>
+                            <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: center;">${item.quantity}${item.product.unit ? ` ${item.product.unit.abbreviation}` : ""}</td>
                             <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: right;">${formatCurrency(item.sellingPrice)}</td>
                             <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: right;">${formatCurrency(item.subtotal)}</td>
                         </tr>`
@@ -167,6 +172,9 @@ export async function POST(
                             ${sale.discountAmount > 0 ? `<p style="margin: 5px 0; color: #22c55e;">Discount: <strong>-${formatCurrency(sale.discountAmount)}</strong></p>` : ""}
                             <p style="margin: 10px 0; font-size: 20px; border-top: 2px solid #333; padding-top: 10px;">
                                 Total: <strong>${formatCurrency(sale.total)}</strong>
+                            </p>
+                            <p style="margin: 5px 0; font-size: 14px; color: #666;">
+                                Payment: ${paymentMethodLabels[(sale as any).paymentMethod] || "Cash"}
                             </p>
                         </div>
                     </div>

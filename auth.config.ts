@@ -23,6 +23,7 @@ export const authConfig = {
                 token.id = user.id
                 token.role = user.role
                 token.sellerId = user.sellerId
+                token.mustChangePassword = (user as any).mustChangePassword ?? false
             }
             return token
         },
@@ -31,6 +32,7 @@ export const authConfig = {
                 session.user.id = token.id as string
                 session.user.role = token.role as "OPERATIONS" | "OWNER" | "SUPPORT" | "ADMIN"
                 session.user.sellerId = token.sellerId as string | null
+                ;(session.user as any).mustChangePassword = token.mustChangePassword ?? false
             }
             return session
         },
